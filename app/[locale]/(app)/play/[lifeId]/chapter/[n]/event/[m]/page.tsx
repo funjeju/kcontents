@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "@/i18n/navigation";
+import { useLife } from "@/lib/hooks/use-life";
 import { motion, AnimatePresence } from "framer-motion";
 import { GameHeader } from "@/components/layout/game-header";
 import { ChoiceButton } from "@/components/game/choice-button";
@@ -21,16 +22,18 @@ export default function EventPage({ params }: Props) {
   const chapterNum = parseInt(n);
   const eventNum = parseInt(m);
 
+  const { life, mutate } = useLife(lifeId);
+
   const [phase, setPhase] = useState<Phase>("reading");
   const [selectedChoice, setSelectedChoice] = useState<string | null>(null);
   const [statDeltas, setStatDeltas] = useState<Partial<Stats>>({});
-  const [stats, setStats] = useState<Stats>(initStats(10));
+  const [saving, setSaving] = useState(false);
 
-  // Mock event data
   const event = getMockEvent(chapterNum, eventNum);
   const totalEvents = 6;
+  const stats = life?.stats ?? initStats(10);
 
-  function handleChoice(choiceId: string) {
+  async function handleChoice(choiceId: string) {
     if (phase !== "choosing") return;
 
     if (choiceId === "C") {
@@ -43,17 +46,28 @@ export default function EventPage({ params }: Props) {
 
     const outcome = choiceId === "A" ? event.outcomes.A : event.outcomes.B;
     setStatDeltas(outcome.statChanges);
-    setStats((prev) => applyStatChanges(prev, outcome.statChanges));
+
+    // 즉시 로컬 업데이트 + 백그라운드 저장
+    mutate({ stats: applyStatChanges(stats, outcome.statChanges) });
+    setSaving(true);
+    try {
+      await fetch(`/api/lives/${lifeId}/events/${chapterNum}-${eventNum}/respond`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ statChanges: outcome.statChanges }),
+      });
+    } catch {
+      // 실패해도 UI는 이미 업데이트됨
+    } finally {
+      setSaving(false);
+    }
   }
 
   function handleNext() {
     const nextEventNum = eventNum + 1;
-
     if (nextEventNum > totalEvents) {
-      // Chapter end
       router.push(`/play/${lifeId}/chapter/${n}/end`);
     } else if (chapterNum === 7 && nextEventNum > 1) {
-      // T-0 moment
       router.push(`/play/${lifeId}/casting`);
     } else {
       router.push(`/play/${lifeId}/chapter/${n}/event/${nextEventNum}`);

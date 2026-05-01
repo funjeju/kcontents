@@ -6,28 +6,38 @@ import { motion } from "framer-motion";
 import { Download, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StatChip } from "@/components/game/stat-bar";
-import { initStats } from "@/lib/utils";
+import { useLife } from "@/lib/hooks/use-life";
+import { MR_SUNSHINE_SCENARIO } from "@/data/scenarios/mr-sunshine";
 
 interface Props {
   params: { lifeId: string };
 }
 
-const MOCK_CARD = {
-  characterName: "김아연",
-  scenarioTitle: "미스터 션샤인 정서",
-  roleName: "개화의 신사",
-  endingTitle: "독립의 불꽃",
-  endingRarity: 4.2,
-  quote: "나는 이 나라의 봄을 보고 싶었다.",
-  year: "1894–1919",
-  stats: initStats(12),
-  cardNumber: "MRS-0847",
+const SCENARIOS: Record<string, typeof MR_SUNSHINE_SCENARIO> = {
+  mr_sunshine: MR_SUNSHINE_SCENARIO,
 };
 
 export default function CardPage({ params }: Props) {
   const router = useRouter();
   const { lifeId } = params;
   const [flipped, setFlipped] = useState(false);
+
+  const { life, loading } = useLife(lifeId);
+
+  const scenario = life ? SCENARIOS[life.scenarioId] : null;
+  const castingRole = scenario?.castingRoles.find((r) => r.id === life?.castingRole);
+  const ending = scenario?.endings.find((e) => e.id === life?.endingId);
+
+  const cardData = {
+    characterName: life?.characterName ?? "—",
+    scenarioTitle: scenario?.title.ko ?? "미스터 션샤인 정서",
+    roleName: castingRole?.name.ko ?? "—",
+    endingTitle: ending?.title.ko ?? "—",
+    endingRarity: ending?.rarityPercentage ?? 0,
+    stats: life?.stats ?? {},
+    cardNumber: `MRS-${lifeId.slice(-4).toUpperCase()}`,
+    year: "1894–1919",
+  };
 
   return (
     <div className="min-h-dvh bg-bg flex flex-col items-center">
@@ -44,75 +54,80 @@ export default function CardPage({ params }: Props) {
           <p className="text-text-caption text-sm mt-1">카드를 탭해서 뒤집어보세요</p>
         </motion.div>
 
-        {/* Card */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.2 }}
-          className="w-full max-w-xs cursor-pointer mb-8"
-          onClick={() => setFlipped((f) => !f)}
-          style={{ perspective: 1000 }}
-        >
+        {loading ? (
+          <div className="w-full max-w-xs aspect-[3/4] rounded-2xl bg-bg-card border border-text/10 flex items-center justify-center">
+            <div className="w-6 h-6 border-2 border-accent-maple/40 border-t-accent-maple rounded-full animate-spin" />
+          </div>
+        ) : (
           <motion.div
-            animate={{ rotateY: flipped ? 180 : 0 }}
-            transition={{ duration: 0.6, ease: "easeInOut" }}
-            style={{ transformStyle: "preserve-3d", position: "relative" }}
-            className="w-full"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.2 }}
+            className="w-full max-w-xs cursor-pointer mb-8"
+            onClick={() => setFlipped((f) => !f)}
+            style={{ perspective: 1000 }}
           >
-            {/* Front */}
-            <div
-              style={{ backfaceVisibility: "hidden" }}
-              className="w-full aspect-[3/4] rounded-2xl border border-accent-maple/30 bg-bg-card shadow-paper-md overflow-hidden flex flex-col"
+            <motion.div
+              animate={{ rotateY: flipped ? 180 : 0 }}
+              transition={{ duration: 0.6, ease: "easeInOut" }}
+              style={{ transformStyle: "preserve-3d", position: "relative" }}
+              className="w-full"
             >
-              {/* Illustration area */}
-              <div className="flex-1 bg-gradient-to-br from-accent-maple/5 to-accent-jade/10 flex items-center justify-center relative">
-                <span className="text-7xl opacity-20">🎭</span>
-                <div className="absolute inset-0 bg-gradient-to-t from-bg-card via-transparent to-transparent" />
-                {/* Rarity */}
-                <div className="absolute top-3 right-3">
-                  <span className="text-xs text-accent-gold font-medium bg-bg-card/80 px-2 py-0.5 rounded-full">
-                    {MOCK_CARD.endingRarity}%
-                  </span>
+              {/* Front */}
+              <div
+                style={{ backfaceVisibility: "hidden" }}
+                className="w-full aspect-[3/4] rounded-2xl border border-accent-maple/30 bg-bg-card shadow-paper-md overflow-hidden flex flex-col"
+              >
+                <div className="flex-1 bg-gradient-to-br from-accent-maple/5 to-accent-jade/10 flex items-center justify-center relative">
+                  <span className="text-7xl opacity-20">🎭</span>
+                  <div className="absolute inset-0 bg-gradient-to-t from-bg-card via-transparent to-transparent" />
+                  {cardData.endingRarity > 0 && (
+                    <div className="absolute top-3 right-3">
+                      <span className="text-xs text-accent-gold font-medium bg-bg-card/80 px-2 py-0.5 rounded-full">
+                        {cardData.endingRarity}%
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <div className="px-4 py-4">
+                  <p className="text-xs text-text-caption mb-1">{cardData.scenarioTitle}</p>
+                  <h2 className="font-serif text-lg font-bold text-text">{cardData.characterName}</h2>
+                  <p className="text-sm text-accent-maple">{cardData.roleName}</p>
+                  <p className="text-xs text-text-caption mt-2">{cardData.year}</p>
+                  <div className="mt-2 pt-2 border-t border-text/5">
+                    <p className="text-xs text-text-caption font-mono">{cardData.cardNumber}</p>
+                  </div>
                 </div>
               </div>
 
-              {/* Card info */}
-              <div className="px-4 py-4">
-                <p className="text-xs text-text-caption mb-1">{MOCK_CARD.scenarioTitle}</p>
-                <h2 className="font-serif text-lg font-bold text-text">{MOCK_CARD.characterName}</h2>
-                <p className="text-sm text-accent-maple">{MOCK_CARD.roleName}</p>
-                <p className="text-xs text-text-caption mt-2">{MOCK_CARD.year}</p>
-                <div className="mt-2 pt-2 border-t border-text/5">
-                  <p className="text-xs text-text-caption font-mono">{MOCK_CARD.cardNumber}</p>
+              {/* Back */}
+              <div
+                style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)", position: "absolute", inset: 0 }}
+                className="w-full aspect-[3/4] rounded-2xl border border-accent-maple/30 bg-bg-card shadow-paper-md overflow-hidden flex flex-col p-5"
+              >
+                <p className="text-xs text-text-caption mb-3 uppercase tracking-wider">결말</p>
+                <h3 className="font-serif text-xl font-bold text-text mb-3">{cardData.endingTitle}</h3>
+
+                {life?.endingNarrative && (
+                  <blockquote className="border-l-2 border-accent-maple/40 pl-3 mb-4">
+                    <p className="text-sm text-text-muted italic font-serif leading-relaxed line-clamp-4">
+                      {life.endingNarrative.split("\n\n")[0]}
+                    </p>
+                  </blockquote>
+                )}
+
+                <div className="mt-auto">
+                  <p className="text-xs text-text-caption mb-2">최종 성장</p>
+                  <div className="flex flex-wrap gap-1">
+                    {Object.entries(cardData.stats).map(([key, val]) => (
+                      <StatChip key={key} statKey={key as any} value={val as number} />
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
-
-            {/* Back */}
-            <div
-              style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)", position: "absolute", inset: 0 }}
-              className="w-full aspect-[3/4] rounded-2xl border border-accent-maple/30 bg-bg-card shadow-paper-md overflow-hidden flex flex-col p-5"
-            >
-              <p className="text-xs text-text-caption mb-3 uppercase tracking-wider">결말</p>
-              <h3 className="font-serif text-xl font-bold text-text mb-3">{MOCK_CARD.endingTitle}</h3>
-
-              <blockquote className="border-l-2 border-accent-maple/40 pl-3 mb-4">
-                <p className="text-sm text-text-muted italic font-serif leading-relaxed">
-                  "{MOCK_CARD.quote}"
-                </p>
-              </blockquote>
-
-              <div className="mt-auto">
-                <p className="text-xs text-text-caption mb-2">최종 성장</p>
-                <div className="flex flex-wrap gap-1">
-                  {Object.entries(MOCK_CARD.stats).map(([key, val]) => (
-                    <StatChip key={key} statKey={key as any} value={val as number} />
-                  ))}
-                </div>
-              </div>
-            </div>
+            </motion.div>
           </motion.div>
-        </motion.div>
+        )}
 
         {/* Actions */}
         <div className="w-full space-y-3">

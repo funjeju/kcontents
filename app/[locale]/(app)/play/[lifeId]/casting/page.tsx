@@ -9,33 +9,49 @@ interface Props {
   params: { lifeId: string };
 }
 
-type CastingPhase = "blackout" | "reveal" | "narrate" | "confirm";
+type CastingPhase = "blackout" | "loading" | "reveal" | "narrate" | "confirm";
 
-const MOCK_CASTING = {
-  roleId: "the_gentleman",
-  roleName: "개화의 신사",
-  roleDescription:
-    "당신은 시대의 변화를 읽는 눈을 가진 사람이 되었습니다. 신학문과 전통 사이에서 자신만의 길을 찾아가는 이.",
-  t0Narrative:
-    "1900년 가을. 한성 어딘가에서, 당신의 삶이 선택의 기로에 놓였습니다.\n\n6년 동안의 선택들이 당신을 여기까지 데려왔습니다.\n\n당신은 — 개화의 신사입니다.",
-  dominantStats: ["intellect", "morality"],
-  iconicImage: null,
-};
+interface CastingResult {
+  roleId: string;
+  roleName: string;
+  roleDescription: string;
+  t0Narrative: string;
+}
 
 export default function CastingPage({ params }: Props) {
   const router = useRouter();
   const { lifeId } = params;
 
   const [phase, setPhase] = useState<CastingPhase>("blackout");
-  const [casting] = useState(MOCK_CASTING);
+  const [casting, setCasting] = useState<CastingResult | null>(null);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
-    const timers = [
-      setTimeout(() => setPhase("reveal"), 1800),
-      setTimeout(() => setPhase("narrate"), 3800),
-    ];
-    return () => timers.forEach(clearTimeout);
-  }, []);
+    // 1.8초 블랙아웃 후 API 호출
+    const t = setTimeout(async () => {
+      setPhase("loading");
+      try {
+        const res = await fetch(`/api/lives/${lifeId}/casting`, { method: "POST" });
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        setCasting(data);
+        setPhase("reveal");
+        setTimeout(() => setPhase("narrate"), 2000);
+      } catch {
+        setError(true);
+        // 폴백: mock 캐스팅
+        setCasting({
+          roleId: "the_witness",
+          roleName: "시대의 목격자",
+          roleDescription: "당신은 이 시대를 온몸으로 기억하는 사람이 되었습니다.",
+          t0Narrative: "1900년 가을. 6년이 지났습니다.\n\n당신은 — 시대의 목격자입니다.",
+        });
+        setPhase("reveal");
+        setTimeout(() => setPhase("narrate"), 2000);
+      }
+    }, 1800);
+    return () => clearTimeout(t);
+  }, [lifeId]);
 
   function handleContinue() {
     setPhase("confirm");
@@ -53,6 +69,22 @@ export default function CastingPage({ params }: Props) {
       </div>
 
       <div className="w-full max-w-game px-screen-x py-12 flex flex-col items-center text-center relative z-10">
+        {/* Loading */}
+        <AnimatePresence>
+          {phase === "loading" && (
+            <motion.div
+              key="loading"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex flex-col items-center gap-3"
+            >
+              <div className="w-6 h-6 border-2 border-accent-maple/40 border-t-accent-maple rounded-full animate-spin" />
+              <p className="text-white/40 text-xs">운명을 결정하는 중...</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Blackout intro */}
         <AnimatePresence>
           {phase === "blackout" && (
@@ -98,7 +130,7 @@ export default function CastingPage({ params }: Props) {
               >
                 <p className="text-accent-maple/80 text-xs tracking-widest uppercase mb-2">당신은</p>
                 <h1 className="font-serif text-3xl font-bold text-white leading-tight">
-                  {casting.roleName}
+                  {casting?.roleName}
                 </h1>
               </motion.div>
 
@@ -120,7 +152,7 @@ export default function CastingPage({ params }: Props) {
                     transition={{ duration: 0.8 }}
                     className="max-w-sm"
                   >
-                    {casting.t0Narrative.split("\n").map((line, i) =>
+                    {(casting?.t0Narrative ?? "").split("\n").map((line, i) =>
                       line ? (
                         <p
                           key={i}
@@ -134,7 +166,7 @@ export default function CastingPage({ params }: Props) {
                     {/* Role description */}
                     <div className="mt-4 p-4 rounded-card border border-accent-maple/20 bg-accent-maple/5">
                       <p className="text-white/60 text-xs leading-relaxed">
-                        {casting.roleDescription}
+                        {casting?.roleDescription}
                       </p>
                     </div>
 

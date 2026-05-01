@@ -5,23 +5,35 @@ import { useRouter } from "@/i18n/navigation";
 import { motion } from "framer-motion";
 import { Link2, MessageCircle, Twitter, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useLife } from "@/lib/hooks/use-life";
+import { MR_SUNSHINE_SCENARIO } from "@/data/scenarios/mr-sunshine";
 
 interface Props {
   params: { lifeId: string };
 }
 
-const MOCK_SHARE = {
-  characterName: "김아연",
-  endingTitle: "독립의 불꽃",
-  roleName: "개화의 신사",
-  shareText:
-    "나는 미스터 션샤인 정서에서 '개화의 신사'로 살았습니다.\n결말: 독립의 불꽃 (상위 4.2%)\n\nLiveMovie에서 당신의 인생을 살아보세요.",
+const SCENARIOS: Record<string, typeof MR_SUNSHINE_SCENARIO> = {
+  mr_sunshine: MR_SUNSHINE_SCENARIO,
 };
 
 export default function SharePage({ params }: Props) {
   const router = useRouter();
   const { lifeId } = params;
   const [copied, setCopied] = useState(false);
+
+  const { life } = useLife(lifeId);
+
+  const scenario = life ? SCENARIOS[life.scenarioId] : null;
+  const castingRole = scenario?.castingRoles.find((r) => r.id === life?.castingRole);
+  const ending = scenario?.endings.find((e) => e.id === life?.endingId);
+
+  const characterName = life?.characterName ?? "—";
+  const roleName = castingRole?.name.ko ?? "—";
+  const endingTitle = ending?.title.ko ?? "—";
+  const endingRarity = ending?.rarityPercentage ?? 0;
+  const scenarioTitle = scenario?.title.ko ?? "미스터 션샤인 정서";
+
+  const shareText = `나는 ${scenarioTitle}에서 '${roleName}'로 살았습니다.\n결말: ${endingTitle}${endingRarity > 0 ? ` (상위 ${endingRarity}%)` : ""}\n\nLiveMovie에서 당신의 인생을 살아보세요.`;
 
   async function handleCopyLink() {
     try {
@@ -37,12 +49,11 @@ export default function SharePage({ params }: Props) {
   }
 
   function handleKakao() {
-    // Kakao SDK integration — stub
     alert("카카오 공유는 SDK 연동 후 활성화됩니다.");
   }
 
   function handleTwitter() {
-    const encoded = encodeURIComponent(MOCK_SHARE.shareText);
+    const encoded = encodeURIComponent(shareText);
     window.open(`https://twitter.com/intent/tweet?text=${encoded}`, "_blank");
   }
 
@@ -56,7 +67,7 @@ export default function SharePage({ params }: Props) {
         >
           <p className="era-label mb-1">공유하기</p>
           <h1 className="font-serif text-2xl font-bold text-text">
-            {MOCK_SHARE.characterName}의 이야기를 나눠요
+            {characterName}의 이야기를 나눠요
           </h1>
         </motion.div>
 
@@ -68,10 +79,10 @@ export default function SharePage({ params }: Props) {
           className="hanji-card p-5 mb-8 border border-accent-maple/20"
         >
           <p className="font-serif font-semibold text-text mb-1">
-            {MOCK_SHARE.roleName} · {MOCK_SHARE.endingTitle}
+            {roleName} · {endingTitle}
           </p>
           <p className="text-sm text-text-muted leading-relaxed whitespace-pre-line">
-            {MOCK_SHARE.shareText}
+            {shareText}
           </p>
         </motion.div>
 

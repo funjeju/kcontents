@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useRouter } from "@/i18n/navigation";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { StatsGrid } from "@/components/game/stat-bar";
 import { initStats } from "@/lib/utils";
-import type { Stats } from "@/lib/types";
+import { useLife } from "@/lib/hooks/use-life";
 
 interface Props {
   params: { lifeId: string; n: string };
@@ -18,9 +18,22 @@ export default function ChapterEndPage({ params }: Props) {
   const chapter = parseInt(n);
   const isLastCradleChapter = chapter >= 7;
 
-  const [stats] = useState<Stats>(initStats(10));
+  const { life } = useLife(lifeId);
+  const stats = life?.stats ?? initStats(10);
   const age = 9 + chapter - 1;
   const year = 1894 + chapter - 1;
+  const markedRef = useRef(false);
+
+  // Mark chapter as completed in Firestore (fire-and-forget)
+  useEffect(() => {
+    if (markedRef.current) return;
+    markedRef.current = true;
+    fetch(`/api/lives/${lifeId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ addCompletedChapter: chapter }),
+    }).catch(() => {});
+  }, [lifeId, chapter]);
 
   const summaryLines = getMockChapterSummary(chapter);
 

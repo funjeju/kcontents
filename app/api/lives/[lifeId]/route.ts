@@ -39,11 +39,17 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     if (!life) return NextResponse.json({ error: "Not found" }, { status: 404 });
     if (life.userId !== uid) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-    const updates = await req.json();
-    await adminDb.collection("lives").doc(params.lifeId).update({
-      ...updates,
-      lastPlayedAt: FieldValue.serverTimestamp(),
-    });
+    const body = await req.json();
+    const updates: Record<string, unknown> = { lastPlayedAt: FieldValue.serverTimestamp() };
+
+    // Special: addCompletedChapter uses arrayUnion to avoid race conditions
+    if (typeof body.addCompletedChapter === "number") {
+      updates.completedChapters = FieldValue.arrayUnion(body.addCompletedChapter);
+      delete body.addCompletedChapter;
+    }
+
+    Object.assign(updates, body);
+    await adminDb.collection("lives").doc(params.lifeId).update(updates);
 
     return NextResponse.json({ ok: true });
   } catch (err) {
