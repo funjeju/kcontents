@@ -24,7 +24,7 @@ export default function EventPage({ params }: Props) {
 
   const { life, mutate } = useLife(lifeId);
 
-  const [phase, setPhase] = useState<Phase>("reading");
+  const [phase, setPhase] = useState<Phase>("choosing");
   const [selectedChoice, setSelectedChoice] = useState<string | null>(null);
   const [statDeltas, setStatDeltas] = useState<Partial<Stats>>({});
   const [saving, setSaving] = useState(false);
@@ -185,15 +185,6 @@ export default function EventPage({ params }: Props) {
           </motion.div>
         )}
 
-        {/* Tap to reveal choices */}
-        {phase === "reading" && (
-          <button
-            className="mt-auto text-center text-sm text-text-caption py-4"
-            onClick={() => setPhase("choosing")}
-          >
-            탭하여 선택 →
-          </button>
-        )}
       </div>
     </div>
   );
