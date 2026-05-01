@@ -44,7 +44,7 @@ export default function CastingPage({ params }: Props) {
           roleId: "the_witness",
           roleName: "시대의 목격자",
           roleDescription: "당신은 이 시대를 온몸으로 기억하는 사람이 되었습니다.",
-          t0Narrative: "1900년 가을. 6년이 지났습니다.\n\n당신은 — 시대의 목격자입니다.",
+          t0Narrative: "1900년 가을. 3년이 지났습니다.\n\n당신은 — 시대의 목격자입니다.",
         });
         setPhase("reveal");
         setTimeout(() => setPhase("narrate"), 2000);
@@ -58,7 +58,7 @@ export default function CastingPage({ params }: Props) {
   }
 
   function handleStartMainStory() {
-    router.push(`/play/${lifeId}/chapter/8/intro`);
+    router.push(`/play/${lifeId}/chapter/5/intro`);
   }
 
   return (

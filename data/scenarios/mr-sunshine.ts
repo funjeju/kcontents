@@ -3,7 +3,7 @@ import type { Scenario } from "@/lib/types";
 export const MR_SUNSHINE_SCENARIO: Scenario = {
   id: "mr_sunshine",
   title: { ko: "Mr. Sunshine 정서", en: "Echoes of Sunshine" },
-  subtitle: { ko: "1894~1907 한성", en: "Hanseong, 1894–1907" },
+  subtitle: { ko: "1897~1907 한성", en: "Hanseong, 1897–1907" },
   description: {
     ko: "격동의 대한제국 말기. 당신은 한성의 작은 골목에서 태어나 시대의 흐름 속에 자신의 길을 찾아가야 합니다. 주인공이 될지, 그 옆에서 시대를 견딜지 — 당신의 선택이 결정합니다.",
     en: "The twilight of Joseon. Born in a narrow alley of Hanseong, you must find your own path amid the tides of history. Will you be the one history remembers, or the witness who endures beside them?",
@@ -15,7 +15,7 @@ export const MR_SUNSHINE_SCENARIO: Scenario = {
   coverImageUrl: "/images/scenarios/mr-sunshine-cover.jpg",
   cradleConfig: {
     type: "self_youth",
-    cradleStartAge: 9,
+    cradleStartAge: 12,
     cradleEndAge: 15,
   },
   mainStoryEndAge: 19,

@@ -23,8 +23,8 @@ export default function FreeformPage({ params }: Props) {
   const [result, setResult] = useState<{ narrative: string; statChanges: Record<string, number> } | null>(null);
   const stats = initStats(10);
   const chapter = parseInt(n);
-  const age = 9 + chapter - 1;
-  const year = 1894 + chapter - 1;
+  const age = 12 + chapter - 1;
+  const year = 1897 + chapter - 1;
 
   async function handleSubmit() {
     if (!input.trim() || input.length < 10) return;

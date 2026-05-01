@@ -5,7 +5,12 @@ import { adminAuth, adminDb, getSessionUid } from "@/lib/firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
 import { cookies } from "next/headers";
 import { generateId, initStats } from "@/lib/utils";
-import type { Life, PathVariables } from "@/lib/types";
+import { MR_SUNSHINE_SCENARIO } from "@/data/scenarios/mr-sunshine";
+import type { Life, PathVariables, Scenario } from "@/lib/types";
+
+const SCENARIOS: Record<string, Scenario> = {
+  mr_sunshine: MR_SUNSHINE_SCENARIO,
+};
 
 export async function POST(req: NextRequest) {
   try {
@@ -31,6 +36,9 @@ export async function POST(req: NextRequest) {
       iconicMomentsSeen: [],
     };
 
+    const scenario = SCENARIOS[scenarioId];
+    const startAge = scenario?.cradleConfig.cradleStartAge ?? 12;
+
     const lifeDoc = {
       id: lifeId,
       userId: uid,
@@ -44,7 +52,7 @@ export async function POST(req: NextRequest) {
       castedAt: null,
       perspective: "self" as const,
       pathVariables,
-      age: 9,
+      age: startAge,
       currentChapterId: null,
       currentEventIndex: null,
       completedChapters: [],

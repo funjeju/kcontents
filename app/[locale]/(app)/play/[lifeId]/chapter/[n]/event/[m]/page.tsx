@@ -63,19 +63,28 @@ export default function EventPage({ params }: Props) {
     }
   }
 
+  // Mr. Sunshine: 크레이들 12세(1897) 시작, 챕터 4 = 15세 = T-0
+  const CRADLE_START_AGE = 12;
+  const CRADLE_START_YEAR = 1897;
+  const T0_CHAPTER = 4;
+
+  const age = CRADLE_START_AGE + chapterNum - 1;
+  const year = CRADLE_START_YEAR + chapterNum - 1;
+  const isT0Chapter = chapterNum === T0_CHAPTER;
+
   function handleNext() {
     const nextEventNum = eventNum + 1;
+    // T-0 챕터: 이벤트 1개 후 캐스팅으로
+    if (isT0Chapter && nextEventNum > 1) {
+      router.push(`/play/${lifeId}/casting`);
+      return;
+    }
     if (nextEventNum > totalEvents) {
       router.push(`/play/${lifeId}/chapter/${n}/end`);
-    } else if (chapterNum === 7 && nextEventNum > 1) {
-      router.push(`/play/${lifeId}/casting`);
     } else {
       router.push(`/play/${lifeId}/chapter/${n}/event/${nextEventNum}`);
     }
   }
-
-  const age = 9 + chapterNum - 1;
-  const year = 1894 + chapterNum - 1;
 
   return (
     <div className="min-h-dvh bg-bg flex flex-col">
@@ -86,7 +95,7 @@ export default function EventPage({ params }: Props) {
         eventProgress={{ current: eventNum, total: totalEvents }}
         stats={stats}
         backHref={`/play/${lifeId}/chapter/${n}/intro`}
-        phase={chapterNum < 7 ? "cradle" : "main"}
+        phase={chapterNum <= T0_CHAPTER ? "cradle" : "main"}
       />
 
       <div className="flex-1 flex flex-col max-w-game mx-auto w-full px-screen-x py-6">
@@ -203,7 +212,7 @@ function getMockEvent(chapter: number, event: number): MockEvent {
   const events: MockEvent[] = [
     {
       narrative:
-        "양반가의 따님 서희(13세)가 약을 사러 한약방에 들렀다.\n그녀는 손에 한문 책을 쥐고 있다.\n\n당신이 빤히 본다는 걸 알아챈 그녀는 책을 살짝 가린다.\n\"여인이 책을 읽는다고 신기하니?\"",
+        "양반가의 따님 서희가 약을 사러 한약방에 들렀다.\n그녀는 손에 한문 책을 쥐고 있다.\n\n당신이 빤히 본다는 걸 알아챈 그녀는 책을 살짝 가린다.\n\"여인이 책을 읽는다고 신기하니?\"",
       choices: [
         { id: "A", text: "\"아닙니다. 무슨 책인지 궁금해서요.\"" },
         { id: "B", text: "고개를 숙이고 일에 집중한다." },

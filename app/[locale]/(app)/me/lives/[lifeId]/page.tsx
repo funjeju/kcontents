@@ -16,8 +16,9 @@ const SCENARIOS: Record<string, typeof MR_SUNSHINE_SCENARIO> = {
   mr_sunshine: MR_SUNSHINE_SCENARIO,
 };
 
-const CHAPTER_AGES = [9, 10, 11, 12, 13, 14, 15];
-const CHAPTER_YEARS = [1894, 1895, 1896, 1897, 1898, 1899, 1900];
+// Mr. Sunshine: 크레이들 12세(1897) → T-0 15세(1900) → 본편
+const CHAPTER_AGES = [12, 13, 14, 15, 16, 17, 18, 19];
+const CHAPTER_YEARS = [1897, 1898, 1899, 1900, 1901, 1902, 1903, 1904];
 
 export default function LifeReviewPage({ params }: Props) {
   const router = useRouter();
