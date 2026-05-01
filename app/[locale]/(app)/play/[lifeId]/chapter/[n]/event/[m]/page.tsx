@@ -444,6 +444,310 @@ const CHAPTER_EVENTS: Record<number, MockEvent[]> = {
       },
     },
   ],
+
+  // 챕터 5 — 16세, 1901년, 격동의 시작
+  5: [
+    {
+      narrative: "제주에서 온 편지가 한성에 돌았다.\n수천 명이 죽었다는 소식.\n신축교안(辛丑敎案). 민중과 천주교도 사이의 충돌.\n\n부친이 편지를 읽다가 조용히 접으셨다.",
+      choices: [
+        { id: "A", text: "\"왜 그런 일이 벌어지는 겁니까?\" 까닭을 묻는다." },
+        { id: "B", text: "조용히 자리를 피한다. 모르는 게 나을 것 같다." },
+        { id: "C", text: "(자유롭게 반응하기)" },
+      ],
+      outcomes: {
+        A: { statChanges: { intellect: 2, emotion: 1 }, resultNarrative: "부친이 한참 후에 입을 여셨다. \"두려움과 분노가 한꺼번에 터지면 사람이 사람을 해친다.\" 당신은 그 말을 오래 곱씹었다." },
+        B: { statChanges: { morality: 1, physique: 1 }, resultNarrative: "뒷마당에서 약재를 고르며 생각했다. 먼 곳의 일이지만, 언젠가 이 한성에도 같은 바람이 불어올지 모른다는 느낌이 들었다." },
+      },
+    },
+    {
+      narrative: "미국 공사관 앞을 지나던 중\n성조기가 펄럭이는 것을 보았다.\n어린 조선 아이가 그 깃발을 신기하게 올려다보고 있다.",
+      choices: [
+        { id: "A", text: "아이 곁에 서서 함께 바라본다. 저 나라는 어떤 곳일까." },
+        { id: "B", text: "발길을 재촉한다. 남의 나라 깃발에 마음 쓸 여유가 없다." },
+        { id: "C", text: "(자유롭게 행동하기)" },
+      ],
+      outcomes: {
+        A: { statChanges: { intellect: 1, creativity: 1 }, resultNarrative: "공사관 안에서 영어 말소리가 새어 나왔다. 저 안에서는 조선의 운명이 저들의 언어로 논해지고 있을지도 몰랐다." },
+        B: { statChanges: { physique: 1, morality: 1 }, resultNarrative: "골목을 돌아 나오면서 뒤를 한 번 돌아보았다. 아이는 여전히 깃발을 바라보고 있었다." },
+      },
+    },
+    {
+      narrative: "종로에서 오랜만에 서희를 마주쳤다.\n그녀는 한 해 사이에 눈빛이 달라져 있었다.\n\"요즘 무엇을 하고 계십니까?\" 그녀가 먼저 물었다.",
+      choices: [
+        { id: "A", text: "\"아직 찾고 있습니다. 제 길을.\" 솔직하게 말한다." },
+        { id: "B", text: "\"한약방 일입니다.\" 짧게 답하고 화제를 돌린다." },
+        { id: "C", text: "(자유롭게 대화하기)" },
+      ],
+      outcomes: {
+        A: { statChanges: { emotion: 2, sociability: 1 }, resultNarrative: "서희가 고개를 끄덕였다. \"저도요.\" 그 대답이 예전보다 훨씬 무겁게 들렸다. 그녀 역시 무언가를 찾고 있었다." },
+        B: { statChanges: { intellect: 1 }, resultNarrative: "서희는 더 묻지 않았다. 인사를 나누고 헤어졌다. 돌아오는 길에 말을 좀 더 했어야 했나 싶었다." },
+      },
+    },
+    {
+      narrative: "관립 외국어 학교에서 학생을 모집한다는 방이 붙었다.\n일어, 영어, 프랑스어 — 새 세상의 언어들.\n\n부친이 그 방을 한참 바라보셨다.",
+      choices: [
+        { id: "A", text: "\"입학하고 싶습니다.\" 직접 말씀드린다." },
+        { id: "B", text: "부친의 눈치를 살피며 기다린다." },
+        { id: "C", text: "(자유롭게 결정하기)" },
+      ],
+      outcomes: {
+        A: { statChanges: { intellect: 1, sociability: 1, morality: 1 }, resultNarrative: "부친이 오래 침묵하셨다. 그리고 말씀하셨다. \"네가 원한다면.\" 그 말이 허락인지 포기인지, 당신은 알 수 없었다." },
+        B: { statChanges: { emotion: 1, morality: 1 }, resultNarrative: "부친은 아무 말씀 없이 걸어가셨다. 그 방은 며칠 후 바람에 떨어졌다." },
+      },
+    },
+    {
+      narrative: "야학(夜學)에서 글을 가르치는 젊은 훈장이 당신에게 물었다.\n\"당신은 왜 배웁니까?\"\n\n처음 들어보는 질문이었다.",
+      choices: [
+        { id: "A", text: "\"살아남기 위해서입니다.\"" },
+        { id: "B", text: "\"세상을 바꾸고 싶기 때문입니다.\"" },
+        { id: "C", text: "(솔직하게 자신의 이유를 말하기)" },
+      ],
+      outcomes: {
+        A: { statChanges: { intellect: 1, physique: 1 }, resultNarrative: "훈장이 고개를 끄덕였다. \"정직한 대답이오.\" 당신은 그것이 칭찬인지 아닌지 몰랐다." },
+        B: { statChanges: { morality: 2, creativity: 1 }, resultNarrative: "훈장이 잠시 당신을 바라보았다. 그리고 웃었다. \"그 마음, 잃지 마시오.\"" },
+      },
+    },
+    {
+      narrative: "1901년이 저문다.\n당신은 이제 열여섯.\n주변의 모든 것이 조금씩 빠르게 변하고 있다.\n\n그 변화 속에서 당신은 어디쯤 서 있는가.",
+      choices: [
+        { id: "A", text: "변화의 중심에 서고 싶다. 지켜보는 것은 이제 충분하다." },
+        { id: "B", text: "아직은 때가 아니다. 더 단단해져야 한다." },
+        { id: "C", text: "(1901년의 자신에게 한 마디 건네기)" },
+      ],
+      outcomes: {
+        A: { statChanges: { morality: 1, sociability: 1 }, resultNarrative: "결심은 말보다 행동이다. 당신은 그것을 알기 시작했다." },
+        B: { statChanges: { intellect: 1, physique: 1 }, resultNarrative: "서두르지 않는 것도 힘이다. 당신은 아직 준비 중이다." },
+      },
+    },
+  ],
+
+  // 챕터 6 — 17세, 1902년, 이민과 동맹의 시대
+  6: [
+    {
+      narrative: "한성에 소문이 돌았다.\n조선 사람들이 배를 타고 하와이로 떠난다고.\n\n\"거기 가면 돈을 번다더라.\" 골목 아이들이 수군거렸다.",
+      choices: [
+        { id: "A", text: "\"나도 언젠가 저 배를 탈 수 있을까.\" 상상해본다." },
+        { id: "B", text: "\"이 땅을 떠나는 게 맞는 일인가.\" 의심이 든다." },
+        { id: "C", text: "(자유롭게 생각하기)" },
+      ],
+      outcomes: {
+        A: { statChanges: { creativity: 1, intellect: 1 }, resultNarrative: "먼 바다 저편 낯선 땅. 그 상상이 가슴을 열어주는 것도 같고, 두렵게 하는 것도 같았다." },
+        B: { statChanges: { morality: 2 }, resultNarrative: "이 땅이 힘들어도 이 땅이 내 땅이다. 당신은 그렇게 생각했다. 하지만 떠나는 사람들을 탓할 수는 없었다." },
+      },
+    },
+    {
+      narrative: "일본과 영국이 동맹을 맺었다는 소식.\n영일동맹(英日同盟).\n\n어른들이 술잔을 내려놓고 한참 침묵했다.",
+      choices: [
+        { id: "A", text: "\"그게 왜 우리한테 나쁜 건가요?\" 솔직히 묻는다." },
+        { id: "B", text: "어른들의 표정을 보며 나쁜 일임을 짐작한다." },
+        { id: "C", text: "(자유롭게 반응하기)" },
+      ],
+      outcomes: {
+        A: { statChanges: { intellect: 2 }, resultNarrative: "어른이 긴 설명을 해주었다. 나라와 나라 사이의 계산. 그 계산에 조선은 없었다는 말이 마지막에 나왔다." },
+        B: { statChanges: { emotion: 1, morality: 1 }, resultNarrative: "말 없이 분위기만으로도 알 수 있는 것들이 있었다. 세상은 점점 조선에게 불리하게 돌아가고 있었다." },
+      },
+    },
+    {
+      narrative: "시내에서 러시아 군인을 처음 보았다.\n덩치 큰 이방인들이 거리를 활보하고 있다.\n일본 상인의 얼굴이 굳어 있다.",
+      choices: [
+        { id: "A", text: "거리 구경에 섞여 지켜본다. 이 도시는 누구의 것인가." },
+        { id: "B", text: "빠르게 자리를 피한다. 강자들 사이에서 살아남는 법이다." },
+        { id: "C", text: "(자유롭게 행동하기)" },
+      ],
+      outcomes: {
+        A: { statChanges: { intellect: 1, emotion: 1 }, resultNarrative: "러시아인, 일본인, 조선인이 한 거리에 섞여 있었다. 각자 다른 셈을 하면서. 이 도시는 누구의 것도 아닌 것처럼 느껴졌다." },
+        B: { statChanges: { physique: 1, morality: 1 }, resultNarrative: "골목으로 빠져나오며 생각했다. 살아남는 것이 먼저다. 판단은 나중에 해도 된다." },
+      },
+    },
+    {
+      narrative: "서희가 보낸 쪽지 한 장.\n\"내일 오시오. 드릴 말씀이 있소.\"\n\n짧고 단정한 글씨체. 그녀답다.",
+      choices: [
+        { id: "A", text: "약속 장소로 간다." },
+        { id: "B", text: "조심스러워 답장만 보낸다. 양반가 규수와 함부로 만날 수 없다." },
+        { id: "C", text: "(자유롭게 결정하기)" },
+      ],
+      outcomes: {
+        A: { statChanges: { sociability: 1, emotion: 2 }, resultNarrative: "서희가 낮은 목소리로 말했다. \"이 나라가 어디로 가는지, 당신은 어떻게 생각하십니까.\" 그 질문은 처음부터 끝이 정해진 대화의 시작이었다." },
+        B: { statChanges: { morality: 1, intellect: 1 }, resultNarrative: "답장을 썼다. '사정이 있어 가기 어렵소.' 쪽지를 접으며 당신은 그 이유가 진심인지 자신에게 물었다." },
+      },
+    },
+    {
+      narrative: "독립 운동을 돕는 자금을 모은다는 젊은이가 찾아왔다.\n\"당신도 힘을 보태 주시오.\"\n눈빛이 진지하다.",
+      choices: [
+        { id: "A", text: "가진 것이 없지만 함께하겠다고 한다." },
+        { id: "B", text: "지금은 때가 아니라며 정중히 거절한다." },
+        { id: "C", text: "(자유롭게 결정하기)" },
+      ],
+      outcomes: {
+        A: { statChanges: { morality: 2, physique: -1 }, resultNarrative: "젊은이가 당신의 손을 잡았다. 그 악수가 무엇을 뜻하는지 당신은 알면서도 잡았다." },
+        B: { statChanges: { intellect: 1, morality: -1 }, resultNarrative: "젊은이는 다음 사람에게로 발걸음을 옮겼다. 당신은 그 뒷모습을 바라보며 오래 서 있었다." },
+      },
+    },
+    {
+      narrative: "열일곱 해가 저문다.\n이 도시엔 러시아와 일본의 기운이 팽팽하다.\n전쟁이 난다는 소문이 끊이지 않는다.\n\n당신은 어떤 사람이 되어가고 있는가.",
+      choices: [
+        { id: "A", text: "이미 선택은 했다. 내 길을 걷는다." },
+        { id: "B", text: "아직 모르겠다. 세상이 먼저 결정할 것이다." },
+        { id: "C", text: "(열일곱의 자신에게 말 건네기)" },
+      ],
+      outcomes: {
+        A: { statChanges: { morality: 1, physique: 1 }, resultNarrative: "선택은 한 번에 오지 않는다. 매일 조금씩 해온 것들이 쌓여 지금의 당신이 되어 있었다." },
+        B: { statChanges: { intellect: 1, emotion: 1 }, resultNarrative: "모른다고 솔직히 인정하는 것. 그것도 용기다. 세상은 이미 움직이고 있었다." },
+      },
+    },
+  ],
+
+  // 챕터 7 — 18세, 1903년, 황무지와 전쟁의 전야
+  7: [
+    {
+      narrative: "일본이 조선의 황무지 개간권을 요구하고 있다는 소식.\n\n\"그 땅에 우리 조상 묘가 있소!\" 어느 농부가 울부짖었다.",
+      choices: [
+        { id: "A", text: "반대 서명 운동에 이름을 올린다." },
+        { id: "B", text: "지켜본다. 어차피 한 사람이 바꿀 수 있는 게 아니다." },
+        { id: "C", text: "(자유롭게 행동하기)" },
+      ],
+      outcomes: {
+        A: { statChanges: { morality: 2, sociability: 1 }, resultNarrative: "수천 명의 이름이 모였다. 그 무게가 어떤 결과를 낳을지 몰랐지만, 이름을 올린 것만으로도 무언가 달라진 기분이었다." },
+        B: { statChanges: { intellect: 1 }, resultNarrative: "열흘 후 일본이 요구를 철회했다. 당신은 자신이 서명을 안 한 것을 기억했다." },
+      },
+    },
+    {
+      narrative: "러시아 군대가 만주에서 철수하지 않고 있다.\n한성에는 전쟁이 곧 난다는 소문이 파다하다.\n\n부친이 약재를 두 배로 사들이셨다.",
+      choices: [
+        { id: "A", text: "\"전쟁이 나면 어떻게 됩니까?\" 부친께 묻는다." },
+        { id: "B", text: "조용히 약재 정리를 돕는다. 준비하는 것만이 할 수 있는 일이다." },
+        { id: "C", text: "(자유롭게 반응하기)" },
+      ],
+      outcomes: {
+        A: { statChanges: { intellect: 1, emotion: 1 }, resultNarrative: "부친이 잠시 손을 멈추셨다. \"사람이 많이 죽는다.\" 그게 전부였다. 더 이상 묻지 않았다." },
+        B: { statChanges: { physique: 1, morality: 1 }, resultNarrative: "약재를 고르며 생각했다. 이 손이 얼마나 많은 사람을 살릴 수 있을까. 전쟁 속에서도." },
+      },
+    },
+    {
+      narrative: "지사(志士)들이 비밀리에 모인다는 소문을 들었다.\n나라를 지키기 위한 의병 준비라고.\n누군가 당신에게 그 자리를 알려주었다.",
+      choices: [
+        { id: "A", text: "그 자리에 찾아간다." },
+        { id: "B", text: "위험하다고 생각해 가지 않는다." },
+        { id: "C", text: "(자유롭게 결정하기)" },
+      ],
+      outcomes: {
+        A: { statChanges: { morality: 2, physique: 1 }, resultNarrative: "좁은 방 안에 열 명 남짓한 사람들이 앉아 있었다. 나이도 신분도 달랐다. 그러나 눈빛만은 같았다." },
+        B: { statChanges: { intellect: 1, sociability: -1 }, resultNarrative: "가지 않기로 했다. 아직은 아니라고. 창호지 뒤로 저 멀리 사람들의 목소리가 들리는 것 같았다." },
+      },
+    },
+    {
+      narrative: "부친이 쓰러지셨다.\n며칠째 누워 계신다.\n약방 일을 당신 혼자 감당해야 했다.",
+      choices: [
+        { id: "A", text: "모든 것을 제쳐두고 부친 곁을 지킨다." },
+        { id: "B", text: "약방을 지키면서 부친을 돌본다. 둘 다 해야 한다." },
+        { id: "C", text: "(자유롭게 선택하기)" },
+      ],
+      outcomes: {
+        A: { statChanges: { emotion: 2, morality: 1 }, resultNarrative: "열흘 후 부친이 일어나셨다. \"너 덕분이다.\" 그 말 한마디가 지난 열흘을 다 지워주었다." },
+        B: { statChanges: { physique: 1, intellect: 1 }, resultNarrative: "몸이 한계에 부딪혔다. 하지만 쓰러지지 않았다. 부친도 당신도." },
+      },
+    },
+    {
+      narrative: "서희와 마지막으로 이야기를 나눴다.\n그녀의 집안에서 혼처를 정했다고 했다.\n\n\"어디 가시는 겁니까.\" 당신이 물었다.",
+      choices: [
+        { id: "A", text: "\"잘 되시길 바랍니다.\" 담담하게 말한다." },
+        { id: "B", text: "아무 말 못하고 그 자리를 떠난다." },
+        { id: "C", text: "(자유롭게 마음을 전하기)" },
+      ],
+      outcomes: {
+        A: { statChanges: { morality: 1, emotion: -1 }, resultNarrative: "서희가 잠시 당신을 바라보았다. \"당신도요.\" 그리고 돌아섰다. 그게 마지막이었는지 당신은 몰랐다." },
+        B: { statChanges: { emotion: 2 }, resultNarrative: "골목을 나오며 뒤돌아보지 않았다. 무언가가 끝나는 소리가 들리는 것 같았다." },
+      },
+    },
+    {
+      narrative: "1903년이 끝나간다.\n전쟁의 기운이 짙다.\n당신은 열여덟.\n이제 더 이상 아이가 아니다.",
+      choices: [
+        { id: "A", text: "내년에 전쟁이 나면 나는 무엇을 할 것인가 — 생각한다." },
+        { id: "B", text: "생각을 멈춘다. 일어나지 않은 일을 걱정하는 건 소용없다." },
+        { id: "C", text: "(열여덟의 자신에게 남길 말 쓰기)" },
+      ],
+      outcomes: {
+        A: { statChanges: { morality: 1, intellect: 1 }, resultNarrative: "준비한 사람만이 그 순간 자신의 선택을 할 수 있다. 당신은 그것을 알기 시작했다." },
+        B: { statChanges: { physique: 1, emotion: 1 }, resultNarrative: "지금 이 순간을 사는 것. 내일은 내일이 알아서 온다. 당신은 촛불을 끄고 잠자리에 들었다." },
+      },
+    },
+  ],
+
+  // 챕터 8 — 19세, 1904년, 러일전쟁·한일의정서
+  8: [
+    {
+      narrative: "1904년 2월.\n러일전쟁이 시작되었다.\n한성 거리에 일본 군대가 줄지어 들어왔다.\n\n사람들이 길 양쪽으로 물러섰다.",
+      choices: [
+        { id: "A", text: "당당히 제자리에 서서 그들이 지나가는 걸 바라본다." },
+        { id: "B", text: "다른 사람들처럼 길가로 물러선다." },
+        { id: "C", text: "(자유롭게 행동하기)" },
+      ],
+      outcomes: {
+        A: { statChanges: { morality: 2, physique: 1 }, resultNarrative: "일본 병사 하나가 당신을 힐끗 바라보았다. 당신은 시선을 피하지 않았다. 그 순간이 오래 기억에 남았다." },
+        B: { statChanges: { intellect: 1, sociability: 1 }, resultNarrative: "살아남는 것이 먼저다. 물러서며 당신은 주변 사람들의 얼굴을 보았다. 두려움과 분노가 뒤섞여 있었다." },
+      },
+    },
+    {
+      narrative: "한일의정서(韓日議定書) 체결.\n조선 정부가 일본군의 군략상 필요한 곳을 제공한다는 내용.\n\n어른들이 말을 잃었다.",
+      choices: [
+        { id: "A", text: "\"이제 어떻게 됩니까?\" 직접 어른들에게 묻는다." },
+        { id: "B", text: "혼자 조용한 곳으로 가서 생각을 정리한다." },
+        { id: "C", text: "(자유롭게 반응하기)" },
+      ],
+      outcomes: {
+        A: { statChanges: { intellect: 1, sociability: 1 }, resultNarrative: "어른들 중 하나가 낮게 말했다. \"이제 시작이오.\" 그 말이 가리키는 끝이 어디인지 아무도 말하지 않았다." },
+        B: { statChanges: { emotion: 2, creativity: 1 }, resultNarrative: "혼자 앉아 오래 생각했다. 이 땅이 어디로 가는지. 내가 무엇을 할 수 있는지. 답은 없었다. 하지만 질문이 생겼다." },
+      },
+    },
+    {
+      narrative: "의병 조직에서 연락이 왔다.\n\"함께하겠소?\"\n이것이 돌이킬 수 없는 선택임을 알고 있다.",
+      choices: [
+        { id: "A", text: "\"함께하겠습니다.\" 손을 내민다." },
+        { id: "B", text: "\"아직은 제 자리에서 할 일이 있소.\" 거절한다." },
+        { id: "C", text: "(자유롭게 결정하기)" },
+      ],
+      outcomes: {
+        A: { statChanges: { morality: 3, physique: 1 }, resultNarrative: "그들의 손이 당신 손을 잡았다. 무거웠다. 기쁘지 않았다. 그러나 옳았다. 적어도 당신은 그렇게 믿었다." },
+        B: { statChanges: { intellect: 1, morality: 1 }, resultNarrative: "연락자가 고개를 끄덕이고 떠났다. 당신은 그 뒷모습을 오래 바라보았다. 이 선택이 비겁한 것인지, 현명한 것인지 — 시간이 답해줄 것이다." },
+      },
+    },
+    {
+      narrative: "부친이 당신을 불러 앉히셨다.\n\"고향으로 내려가거라. 한성은 이제 위험하다.\"",
+      choices: [
+        { id: "A", text: "\"저는 여기 있겠습니다.\" 단호하게 말한다." },
+        { id: "B", text: "\"알겠습니다.\" 부친의 뜻을 따른다." },
+        { id: "C", text: "(자유롭게 마음을 말하기)" },
+      ],
+      outcomes: {
+        A: { statChanges: { morality: 2, emotion: 1 }, resultNarrative: "부친이 오래 침묵하셨다. 그리고 당신의 어깨에 손을 얹으셨다. \"그래. 네 뜻대로 해라.\" 그 손이 무거웠다." },
+        B: { statChanges: { emotion: 2, physique: -1 }, resultNarrative: "짐을 쌌다. 한성을 떠나며 뒤를 돌아보았다. 저 골목, 저 한약방, 저 거리. 언제 다시 볼 수 있을까." },
+      },
+    },
+    {
+      narrative: "전쟁 중에 부상병을 치료하는 일을 돕고 있다.\n어제는 조선 사람을, 오늘은 일본 병사를 돌봤다.\n\n\"둘 다 사람이오.\" 늙은 의원이 말했다.",
+      choices: [
+        { id: "A", text: "그 말이 옳다고 생각한다. 사람 먼저다." },
+        { id: "B", text: "그 말에 동의하기 어렵다. 적은 적이다." },
+        { id: "C", text: "(자유롭게 생각하기)" },
+      ],
+      outcomes: {
+        A: { statChanges: { morality: 2, emotion: 1 }, resultNarrative: "당신 손이 붕대를 감는다. 이 사람이 어제 총을 쐈는지 모른다. 하지만 지금은 살려야 한다. 그것이 당신의 선택이었다." },
+        B: { statChanges: { physique: 1, morality: -1 }, resultNarrative: "그 말이 틀렸다고 할 수 없었다. 하지만 받아들이기 어려웠다. 당신의 마음속에 무언가가 굳어가고 있었다." },
+      },
+    },
+    {
+      narrative: "1904년이 저문다.\n전쟁은 아직 끝나지 않았다.\n\n당신은 열아홉.\n이 한 해가 당신에게 무엇을 남겼는가.",
+      choices: [
+        { id: "A", text: "많은 것을 잃었지만, 잃어서는 안 될 것은 지켰다." },
+        { id: "B", text: "아직 끝나지 않았다. 내가 해야 할 일이 남아 있다." },
+        { id: "C", text: "(1904년의 당신에게 마지막 말 건네기)" },
+      ],
+      outcomes: {
+        A: { statChanges: { morality: 1, emotion: 2 }, resultNarrative: "무엇을 지켰는가. 당신만이 안다. 그리고 그것으로 충분하다." },
+        B: { statChanges: { physique: 1, intellect: 1 }, resultNarrative: "해야 할 일이 있다는 것. 그것이 당신을 아직 서게 한다. 내년도, 그 다음 해도, 계속." },
+      },
+    },
+  ],
 };
 
 function getMockEvent(chapter: number, event: number): MockEvent {
