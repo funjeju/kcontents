@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import type { Stats } from "@/lib/types";
 
 export interface ChapterEvent {
@@ -15,10 +15,19 @@ export interface ChapterEvent {
 export function useChapterEvents(
   scenarioId: string | null | undefined,
   chapterNum: number
-): { events: ChapterEvent[] | null; loading: boolean; generating: boolean } {
+): { events: ChapterEvent[] | null; loading: boolean; generating: boolean; error: boolean; retry: () => void } {
   const [events, setEvents] = useState<ChapterEvent[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
+  const [error, setError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+
+  const retry = useCallback(() => {
+    setRetryCount((n) => n + 1);
+    setError(false);
+    setEvents(null);
+    setLoading(true);
+  }, []);
 
   useEffect(() => {
     if (!scenarioId) {
@@ -28,6 +37,7 @@ export function useChapterEvents(
     let cancelled = false;
     setLoading(true);
     setGenerating(false);
+    setError(false);
 
     async function load() {
       const r = await fetch(`/api/scenarios/${scenarioId}/chapters/${chapterNum}`);
@@ -41,7 +51,6 @@ export function useChapterEvents(
         }
       }
 
-      // Not in Firestore or narrative too short — generate on-demand
       if (!cancelled) setGenerating(true);
       const genR = await fetch(
         `/api/scenarios/${scenarioId}/chapters/${chapterNum}/generate`,
@@ -50,20 +59,29 @@ export function useChapterEvents(
       if (!cancelled) {
         if (genR.ok) {
           const genData = await genR.json();
-          setEvents(genData?.events ?? null);
+          if (genData?.events?.length > 0) {
+            setEvents(genData.events);
+          } else {
+            setError(true);
+          }
         } else {
-          setEvents(null);
+          setError(true);
         }
         setGenerating(false);
       }
     }
 
     load()
-      .catch(() => { if (!cancelled) { setEvents(null); setGenerating(false); } })
+      .catch(() => {
+        if (!cancelled) {
+          setError(true);
+          setGenerating(false);
+        }
+      })
       .finally(() => { if (!cancelled) setLoading(false); });
 
     return () => { cancelled = true; };
-  }, [scenarioId, chapterNum]);
+  }, [scenarioId, chapterNum, retryCount]);
 
-  return { events, loading, generating };
+  return { events, loading, generating, error, retry };
 }

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
-import { Home, BookOpen, User, LogIn } from "lucide-react";
+import { Home, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -114,7 +114,6 @@ function BottomNav() {
 
   const items = [
     { href: "/scenarios/recommended", label: t("scenarios"), icon: Home },
-    { href: "/scenarios",             label: t("browse"),    icon: BookOpen },
     { href: "/me",                    label: t("myLives"),   icon: User },
   ] as const;
 

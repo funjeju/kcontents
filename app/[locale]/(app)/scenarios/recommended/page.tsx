@@ -6,13 +6,11 @@ export const dynamic = "force-dynamic";
 
 async function getPublishedScenarios(): Promise<Scenario[]> {
   try {
-    const snap = await adminDb
-      .collection("scenarios")
-      .where("status", "==", "published")
-      .get();
+    const snap = await adminDb.collection("scenarios").get();
     const scenarios = snap.docs.map((d) => ({ id: d.id, ...d.data() })) as Scenario[];
-    // 최신순 정렬 (publishedAt 또는 updatedAt 기준)
-    return scenarios.sort((a, b) => {
+    // status가 "draft"인 것만 제외, 나머지는 모두 표시
+    const visible = scenarios.filter((s) => (s as Record<string, unknown>)["status"] !== "draft");
+    return visible.sort((a, b) => {
       const aDate = a.publishedAt ?? a.updatedAt ?? "";
       const bDate = b.publishedAt ?? b.updatedAt ?? "";
       return bDate.localeCompare(aDate);

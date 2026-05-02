@@ -28,7 +28,7 @@ export default function EventPage({ params }: Props) {
   const { life, mutate } = useLife(lifeId);
   const { scenario, loading: scenarioLoading } = useScenario(life?.scenarioId);
 
-  const { events: firestoreEvents, loading: eventsLoading, generating } = useChapterEvents(
+  const { events: firestoreEvents, loading: eventsLoading, generating, error: eventsError, retry: retryEvents } = useChapterEvents(
     life?.scenarioId,
     chapterNum
   );
@@ -115,7 +115,7 @@ export default function EventPage({ params }: Props) {
   // Loading skeleton (events loading or being generated)
   if (!event) {
     return (
-      <div className="min-h-dvh bg-bg flex flex-col">
+      <div className="h-dvh bg-bg flex flex-col">
         <GameHeader
           chapter={chapterNum} age={age} year={year ?? undefined}
           eventProgress={{ current: eventNum, total: 6 }}
@@ -125,20 +125,30 @@ export default function EventPage({ params }: Props) {
         />
         <div className="flex-1 flex flex-col max-w-game mx-auto w-full px-screen-x py-6">
           <p className="era-label mb-4">{ageYearLabel}</p>
-          {generating ? (
+          {eventsError ? (
+            <div className="flex flex-col items-center justify-center flex-1 gap-4">
+              <p className="text-text-muted text-sm">이야기를 불러오지 못했어요</p>
+              <button
+                onClick={retryEvents}
+                className="px-4 py-2 text-sm rounded-full border border-text/20 text-text hover:border-text/40 transition-colors"
+              >
+                다시 시도
+              </button>
+            </div>
+          ) : generating ? (
             <div className="space-y-2">
               <p className="text-xs text-text-caption animate-pulse">이야기를 생성하고 있습니다...</p>
               <div className="space-y-3 animate-pulse">
-                <div className="h-4 bg-white/10 rounded w-3/4" />
-                <div className="h-4 bg-white/10 rounded w-full" />
-                <div className="h-4 bg-white/10 rounded w-2/3" />
+                <div className="h-4 bg-text/10 rounded w-3/4" />
+                <div className="h-4 bg-text/10 rounded w-full" />
+                <div className="h-4 bg-text/10 rounded w-2/3" />
               </div>
             </div>
           ) : (
             <div className="space-y-3 animate-pulse">
-              <div className="h-4 bg-white/10 rounded w-3/4" />
-              <div className="h-4 bg-white/10 rounded w-full" />
-              <div className="h-4 bg-white/10 rounded w-2/3" />
+              <div className="h-4 bg-text/10 rounded w-3/4" />
+              <div className="h-4 bg-text/10 rounded w-full" />
+              <div className="h-4 bg-text/10 rounded w-2/3" />
             </div>
           )}
         </div>
