@@ -276,21 +276,6 @@ export default function EventPage({ params }: Props) {
                 isFreeform={choice.id === "C"}
               />
             ))}
-
-            {life?.selectedHeroCardSlots && life.selectedHeroCardSlots.length > 0 && (
-              <CardTray
-                lifeId={lifeId}
-                scenarioId={life.scenarioId}
-                selectedCardIds={life.selectedHeroCardSlots}
-                usedCards={life.usedHeroCards ?? []}
-                stats={stats}
-                chapterNum={chapterNum}
-                onCardUsed={(_cardId, newStats) => {
-                  setLiveStats(newStats);
-                  mutate({ stats: newStats });
-                }}
-              />
-            )}
           </motion.div>
         )}
 
@@ -300,6 +285,22 @@ export default function EventPage({ params }: Props) {
             animate={{ opacity: 1, y: 0 }}
             className="pt-4 pb-2"
           >
+            {life?.selectedHeroCardSlots && life.selectedHeroCardSlots.length > 0 && (
+              <div className="mb-3">
+                <CardTray
+                  lifeId={lifeId}
+                  scenarioId={life.scenarioId}
+                  selectedCardIds={life.selectedHeroCardSlots}
+                  usedCards={life.usedHeroCards ?? []}
+                  stats={stats}
+                  chapterNum={chapterNum}
+                  onCardUsed={(_cardId, newStats) => {
+                    setLiveStats(newStats);
+                    mutate({ stats: newStats });
+                  }}
+                />
+              </div>
+            )}
             <Button size="lg" fullWidth onClick={handleNext}>
               {eventNum >= totalEvents ? tg("chapterEnd") : tg("next")}
             </Button>
