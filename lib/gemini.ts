@@ -10,7 +10,7 @@ function getClient() {
 }
 
 export async function generateText(prompt: string): Promise<string> {
-  const model = getClient().getGenerativeModel({ model: "gemini-2.5-flash-preview-04-17" });
+  const model = getClient().getGenerativeModel({ model: "gemini-2.5-flash" });
   const result = await model.generateContent(prompt);
   return result.response.text();
 }
