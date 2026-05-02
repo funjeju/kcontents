@@ -1,38 +1,70 @@
+export const dynamic = "force-dynamic";
+
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
+import { adminDb } from "@/lib/firebase-admin";
+import type { Scenario } from "@/lib/types";
 
 interface Props {
   params: { lifeId: string; n: string };
 }
 
-// Mr. Sunshine 정서: 크레이들 12세(1897) → T-0 15세(1900) → 본편 19세(1904)
-const CRADLE_START_AGE = 12;
-const CRADLE_START_YEAR = 1897;
-const T0_CHAPTER = 4; // 챕터 4 = 15세 = T-0
+async function getScenarioForLife(lifeId: string): Promise<Scenario | null> {
+  try {
+    const lifeDoc = await adminDb.collection("lives").doc(lifeId).get();
+    if (!lifeDoc.exists) return null;
+    const scenarioId = lifeDoc.data()?.scenarioId as string | undefined;
+    if (!scenarioId) return null;
+    const scenarioDoc = await adminDb.collection("scenarios").doc(scenarioId).get();
+    if (!scenarioDoc.exists) return null;
+    return { id: scenarioDoc.id, ...scenarioDoc.data() } as Scenario;
+  } catch {
+    return null;
+  }
+}
 
 export default async function ChapterIntroPage({ params }: Props) {
   const { lifeId, n } = params;
   const chapter = parseInt(n);
+  const scenario = await getScenarioForLife(lifeId);
 
-  const age = CRADLE_START_AGE + chapter - 1;
-  const year = CRADLE_START_YEAR + chapter - 1;
-  const isT0 = chapter === T0_CHAPTER;
-  const data = getChapterData(chapter, age, year, isT0);
+  const cradleStartAge = scenario?.cradleConfig?.cradleStartAge ?? 12;
+  const cradleEndAge = scenario?.cradleConfig?.cradleEndAge ?? 15;
+  const eraStartYear = scenario?.cradleConfig?.eraStartYear;
+
+  const age = cradleStartAge + chapter - 1;
+  const year = eraStartYear != null ? eraStartYear + chapter - 1 : null;
+  const t0Chapter = cradleEndAge - cradleStartAge + 1;
+  const isT0 = chapter === t0Chapter;
+
+  const seasons = ["봄", "여름", "가을", "겨울"] as const;
+  const seasonIndex = (chapter - 1) % 4;
+  const season = seasons[seasonIndex];
+
+  const eraLabel = scenario?.era
+    ? `${scenario.title?.ko ?? ""} · ${isT0 ? "T-0" : `챕터 ${chapter}`}`
+    : (isT0 ? "T-0 · 운명의 순간" : `챕터 ${chapter}`);
+
+  const narrative = isT0
+    ? `${year != null ? `${year}년 ${season}.` : `${age}세, ${season}.`}\n\n당신 앞에 결정적인 순간이 다가왔습니다.\n\n이제 당신이 누구인지 알게 될 시간입니다.`
+    : `${year != null ? `${year}년 ${season}.` : `${age}세, ${season}.`}\n\n당신은 ${age}세입니다. ${scenario?.title?.ko ?? "이 이야기"}의 세계를 살아가고 있습니다.\n\n어떤 선택을 하느냐에 따라 당신의 이야기는 달라집니다.`;
+
+  const eventCount = isT0 ? 1 : 6;
 
   return (
     <div className="min-h-dvh bg-bg flex flex-col">
       <div className="max-w-game mx-auto w-full px-screen-x pt-8 pb-4">
-        <p className="era-label">{data.eraLabel}</p>
+        <p className="era-label">{eraLabel}</p>
       </div>
 
       <div className="flex-1 flex flex-col justify-center px-screen-x max-w-game mx-auto w-full">
         <div className="animate-fade-in-slow">
           {/* Season */}
           <div className="flex gap-1 mb-6">
-            {["봄", "여름", "가을", "겨울"].map((s, i) => (
+            {seasons.map((s, i) => (
               <span
                 key={s}
-                className={`text-sm ${i === data.seasonIndex ? "text-text font-medium" : "text-text-caption/40"}`}
+                className={`text-sm ${i === seasonIndex ? "text-text font-medium" : "text-text-caption/40"}`}
               >
                 {s}
               </span>
@@ -41,17 +73,19 @@ export default async function ChapterIntroPage({ params }: Props) {
 
           {/* Age + year */}
           <h1 className="font-serif text-3xl font-bold text-text mb-2">{age}세</h1>
-          <p className="font-serif text-xl text-text-muted mb-6">{year}년 {data.season}.</p>
+          {year != null && (
+            <p className="font-serif text-xl text-text-muted mb-6">{year}년 {season}.</p>
+          )}
 
           {/* Narrative */}
           <div className="narrative-text mb-8">
-            {data.narrative.split("\n").map((line, i) => (
+            {narrative.split("\n").map((line, i) => (
               <p key={i} className={i > 0 ? "mt-3" : ""}>{line}</p>
             ))}
           </div>
 
           <p className="text-xs text-text-caption mb-6">
-            {isT0 ? "T-0 · 운명의 순간" : `챕터 ${chapter} · 이벤트 ${data.eventCount}개`}
+            {isT0 ? "T-0 · 운명의 순간" : `챕터 ${chapter} · 이벤트 ${eventCount}개`}
           </p>
         </div>
       </div>
@@ -65,62 +99,4 @@ export default async function ChapterIntroPage({ params }: Props) {
       </div>
     </div>
   );
-}
-
-function getChapterData(chapter: number, age: number, year: number, isT0: boolean) {
-  const chapters: Record<number, {
-    season: string;
-    seasonIndex: number;
-    eraLabel: string;
-    eventCount: number;
-    narrative: string;
-  }> = {
-    1: {
-      season: "봄",
-      seasonIndex: 0,
-      eraLabel: "대한제국 원년",
-      eventCount: 6,
-      narrative:
-        `${year}년 봄. 대한제국이 선포되었습니다.\n\n당신은 ${age}세입니다. 한성의 거리는 새 나라의 이름으로 떠들썩하지만, 당신의 하루는 여전히 한약방 앞에서 시작됩니다.\n\n세상이 바뀌고 있습니다. 그 변화가 당신에게도 다가올 것입니다.`,
-    },
-    2: {
-      season: "여름",
-      seasonIndex: 1,
-      eraLabel: "대한제국 · 독립협회",
-      eventCount: 6,
-      narrative:
-        `${age}세의 여름. ${year}년.\n\n독립협회가 만민공동회를 열었습니다. 종로 거리에 사람들이 모여들었습니다.\n\n당신도 그 소리를 들었습니다. 처음으로, 나라에 대해 진지하게 생각하게 된 계절.`,
-    },
-    3: {
-      season: "가을",
-      seasonIndex: 2,
-      eraLabel: "대한제국",
-      eventCount: 6,
-      narrative:
-        `${age}세, ${year}년 가을.\n\n한성에 전차가 놓였습니다. 당신은 처음으로 그 철로를 바라보았습니다.\n\n세상이 빠르게 변하고 있습니다. 당신도 변해야 할 것 같습니다.`,
-    },
-    4: {
-      season: "가을",
-      seasonIndex: 2,
-      eraLabel: "대한제국 · T-0",
-      eventCount: 1,
-      narrative:
-        `${age}세, ${year}년 가을.\n\n3년이 지났습니다.\n\n세상이 변했습니다. 당신도 변했습니다.\n\n이제, 당신이 누구인지 알게 될 시간입니다.`,
-    },
-  };
-
-  // 본편 챕터 (5장 이후)
-  if (chapter >= 5) {
-    const mainAge = age;
-    const mainYear = year;
-    return {
-      season: "봄",
-      seasonIndex: 0,
-      eraLabel: `대한제국 · ${mainYear}년`,
-      eventCount: 6,
-      narrative: `${mainAge}세, ${mainYear}년.\n\n당신의 이야기가 계속됩니다.`,
-    };
-  }
-
-  return chapters[chapter] ?? chapters[1];
 }

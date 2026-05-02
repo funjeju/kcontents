@@ -1,0 +1,124 @@
+export const dynamic = "force-dynamic";
+
+import { NextRequest, NextResponse } from "next/server";
+import { adminDb } from "@/lib/firebase-admin";
+import { generateText } from "@/lib/gemini";
+import type { Scenario } from "@/lib/types";
+
+function buildPrompt(scenario: Scenario, chapterNum: number, age: number, isT0: boolean): string {
+  const title = scenario.title?.ko ?? "시나리오";
+  const description = scenario.description?.ko ?? "";
+  const era = scenario.era ?? "";
+
+  if (isT0) {
+    return `당신은 K-Drama Life 게임의 이벤트 설계자입니다.
+
+시나리오: "${title}" (${era})
+설명: ${description}
+
+챕터 ${chapterNum}은 T-0 순간입니다 — 주인공이 ${age}세에 맞이하는 운명의 결정 순간입니다.
+이 챕터에는 단 1개의 이벤트만 필요합니다.
+
+다음 JSON 형식으로 정확히 1개의 이벤트를 생성하세요:
+[
+  {
+    "narrative": "2~4문장 내러티브. ${age}세의 주인공이 처한 결정적 순간을 묘사. 시나리오 세계관에 맞게.",
+    "choices": [
+      { "id": "A", "text": "선택지 A 텍스트 (10~20자)" },
+      { "id": "B", "text": "선택지 B 텍스트 (10~20자)" },
+      { "id": "C", "text": "(자유롭게 생각 말하기)" }
+    ],
+    "outcomes": {
+      "A": { "statChanges": { "intellect": 0, "creativity": 0, "emotion": 0, "physique": 0, "sociability": 0, "morality": 0 }, "resultNarrative": "선택 결과 1~2문장" },
+      "B": { "statChanges": { "intellect": 0, "creativity": 0, "emotion": 0, "physique": 0, "sociability": 0, "morality": 0 }, "resultNarrative": "선택 결과 1~2문장" }
+    }
+  }
+]
+
+statChanges: 각 값은 -2 ~ +2 범위. 합산 절댓값이 2~4. 순수 JSON 배열만 출력.`;
+  }
+
+  return `당신은 K-Drama Life 게임의 이벤트 설계자입니다.
+
+시나리오: "${title}" (${era})
+설명: ${description}
+
+챕터 ${chapterNum}: 주인공이 ${age}세를 살아가는 시기.
+이 시나리오의 세계관과 분위기에 완전히 맞는 이벤트 6개를 생성하세요.
+
+각 이벤트는 반드시 이 시나리오의 배경/시대/직업/환경에 맞아야 합니다.
+절대 다른 시나리오의 내용(예: 조선시대, 일제강점기 등)이 섞이지 않도록 하세요.
+
+다음 JSON 형식으로 정확히 6개의 이벤트를 생성하세요:
+[
+  {
+    "narrative": "2~4문장 내러티브. ${age}세 주인공의 일상적/결정적 순간. 이 시나리오 세계관에 맞게.",
+    "choices": [
+      { "id": "A", "text": "선택지 A 텍스트 (10~20자)" },
+      { "id": "B", "text": "선택지 B 텍스트 (10~20자)" },
+      { "id": "C", "text": "(자유롭게 생각 말하기)" }
+    ],
+    "outcomes": {
+      "A": { "statChanges": { "intellect": 0, "creativity": 0, "emotion": 0, "physique": 0, "sociability": 0, "morality": 0 }, "resultNarrative": "선택 결과 1~2문장" },
+      "B": { "statChanges": { "intellect": 0, "creativity": 0, "emotion": 0, "physique": 0, "sociability": 0, "morality": 0 }, "resultNarrative": "선택 결과 1~2문장" }
+    }
+  }
+]
+
+statChanges: 각 값은 -2 ~ +2 범위. 합산 절댓값이 2~4.
+6개 이벤트 전체에서 다양한 stat이 고루 변화해야 함.
+순수 JSON 배열만 출력. 코드블록 없이.`;
+}
+
+function parseEvents(text: string): unknown[] | null {
+  try {
+    const match = text.match(/```json\s*([\s\S]*?)```/) ?? text.match(/(\[[\s\S]*\])/);
+    const raw = match?.[1] ?? text.trim();
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) return parsed;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export async function POST(
+  _req: NextRequest,
+  { params }: { params: { id: string; n: string } }
+) {
+  try {
+    const chapterRef = adminDb
+      .collection("scenarios").doc(params.id)
+      .collection("chapters").doc(params.n);
+
+    // Return existing if already generated
+    const existing = await chapterRef.get();
+    if (existing.exists && Array.isArray(existing.data()?.events) && existing.data()!.events.length > 0) {
+      return NextResponse.json({ events: existing.data()!.events });
+    }
+
+    const scenarioDoc = await adminDb.collection("scenarios").doc(params.id).get();
+    if (!scenarioDoc.exists) return NextResponse.json({ events: null }, { status: 404 });
+    const scenario = { id: scenarioDoc.id, ...scenarioDoc.data() } as Scenario;
+
+    const chapterNum = parseInt(params.n);
+    const cradleStartAge = scenario.cradleConfig?.cradleStartAge ?? 12;
+    const cradleEndAge = scenario.cradleConfig?.cradleEndAge ?? 15;
+    const age = cradleStartAge + chapterNum - 1;
+    const t0Chapter = cradleEndAge - cradleStartAge + 1;
+    const isT0 = chapterNum === t0Chapter;
+
+    const prompt = buildPrompt(scenario, chapterNum, age, isT0);
+    const text = await generateText(prompt);
+    const events = parseEvents(text);
+
+    if (events && events.length > 0) {
+      await chapterRef.set({ events, generatedAt: new Date().toISOString() });
+    }
+
+    return NextResponse.json({ events: events ?? null });
+  } catch (e) {
+    console.error("[chapters/generate]", e);
+    return NextResponse.json({ events: null }, { status: 500 });
+  }
+}

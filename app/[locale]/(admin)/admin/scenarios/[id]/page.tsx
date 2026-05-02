@@ -21,7 +21,7 @@ interface ChapterEvent {
     B: { statChanges: StatChanges; resultNarrative: string };
   };
 }
-interface ChapterInfo { n: number; age: number; year: number; isT0: boolean }
+interface ChapterInfo { n: number; age: number; year: number | null; isT0: boolean }
 
 interface LocationData {
   id?: string;
@@ -188,18 +188,16 @@ export default function AdminScenarioDetailPage() {
   // ── Compute chapters from scenario ──
   function getChapters(): ChapterInfo[] {
     if (!scenario) return [];
-    const cfg = scenario.cradleConfig as { cradleStartAge?: number; cradleEndAge?: number } | undefined;
+    const cfg = scenario.cradleConfig as { cradleStartAge?: number; cradleEndAge?: number; eraStartYear?: number | null } | undefined;
     const cradleStartAge = cfg?.cradleStartAge ?? 12;
     const cradleEndAge = cfg?.cradleEndAge ?? 15;
     const mainStoryEndAge = (scenario.mainStoryEndAge as number) ?? 19;
-    const subtitleKo = (scenario.subtitle as { ko?: string })?.ko ?? "";
-    const yearMatch = subtitleKo.match(/(\d{4})/);
-    const startYear = yearMatch ? parseInt(yearMatch[1]) : 1897;
+    const eraStartYear = cfg?.eraStartYear ?? null;
     const total = mainStoryEndAge - cradleStartAge + 1;
     return Array.from({ length: total }, (_, i) => ({
       n: i + 1,
       age: cradleStartAge + i,
-      year: startYear + i,
+      year: eraStartYear != null ? eraStartYear + i : null,
       isT0: (cradleStartAge + i) === cradleEndAge,
     }));
   }
@@ -1102,6 +1100,7 @@ function OverviewTab({
           <div><p className="text-white/30 text-xs mb-1">타입</p><p className="text-white font-medium">{s.cradleConfig?.type}</p></div>
           <div><p className="text-white/30 text-xs mb-1">시작 나이</p><p className="text-white font-medium">{s.cradleConfig?.cradleStartAge}세</p></div>
           <div><p className="text-white/30 text-xs mb-1">T-0 나이</p><p className="text-white font-medium">{s.cradleConfig?.cradleEndAge}세</p></div>
+          <div><p className="text-white/30 text-xs mb-1">시작 연도</p><p className="text-white font-medium">{s.cradleConfig?.eraStartYear ?? "현대"}</p></div>
           <div><p className="text-white/30 text-xs mb-1">스토리 종료</p><p className="text-white font-medium">{s.mainStoryEndAge}세</p></div>
         </div>
       </div>
@@ -1245,7 +1244,7 @@ function ChapterCard({
               </span>
             )}
           </div>
-          <p className="text-white/40 text-xs mt-0.5">{ch.age}세 · {ch.year}년</p>
+          <p className="text-white/40 text-xs mt-0.5">{ch.age}세{ch.year != null ? ` · ${ch.year}년` : ""}</p>
         </div>
 
         {/* Status badge */}
@@ -2232,7 +2231,7 @@ interface ScenarioShape {
   era?: string;
   status?: Status;
   heaviness?: number;
-  cradleConfig?: { type?: string; cradleStartAge?: number; cradleEndAge?: number };
+  cradleConfig?: { type?: string; cradleStartAge?: number; cradleEndAge?: number; eraStartYear?: number | null };
   mainStoryEndAge?: number;
   castingRoles?: { id?: string; name?: { ko?: string }; shortDescription?: { ko?: string }; endingIds?: string[] }[];
   endings?: { id?: string; castingRoleId?: string; title?: { ko?: string }; rarityPercentage?: number }[];

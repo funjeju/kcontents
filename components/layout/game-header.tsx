@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 interface GameHeaderProps {
   chapter: number;
   age: number;
-  year: number;
+  year?: number;
   eventProgress: { current: number; total: number };
   stats: Stats;
   backHref?: string;
@@ -53,8 +53,7 @@ export function GameHeader({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 text-sm text-text-muted">
               <span className="font-medium text-text">{age}세</span>
-              <span>·</span>
-              <span>{year}년</span>
+              {year != null && <><span>·</span><span>{year}년</span></>}
               <span>·</span>
               <span className="text-text-caption text-xs">{phaseLabel}</span>
             </div>

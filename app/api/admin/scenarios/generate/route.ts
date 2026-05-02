@@ -28,7 +28,8 @@ const JSON_SCHEMA = `{
   "cradleConfig": {
     "type": "self_youth 또는 parent_raising",
     "cradleStartAge": T0나이-3,
-    "cradleEndAge": T0나이
+    "cradleEndAge": T0나이,
+    "eraStartYear": 역사시나리오면_시작연도_숫자_현대면_null
   },
   "mainStoryEndAge": T0나이+4~6,
   "isPremium": false,

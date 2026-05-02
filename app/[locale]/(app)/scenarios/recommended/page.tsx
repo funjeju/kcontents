@@ -20,7 +20,8 @@ export default async function RecommendedPage() {
   const scenarios = await getPublishedScenarios();
 
   return (
-    <div className="page-container">
+    /* 모바일: max-w-game(480px) 중앙 / PC(lg+): 넉넉하게 1100px */
+    <div className="mx-auto px-4 py-6 w-full max-w-game lg:max-w-[1100px] lg:px-8">
       {/* Header */}
       <div className="mb-6 animate-slide-up">
         <p className="era-label mb-1">K-Drama Life</p>
@@ -30,14 +31,14 @@ export default async function RecommendedPage() {
         <p className="text-text-muted text-sm mt-1">어떤 인생을 살아보시겠어요?</p>
       </div>
 
-      {/* Scenarios */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 animate-fade-in">
+      {/* Scenarios — 모바일 1열 / PC 3열 */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 animate-fade-in">
         {scenarios.length > 0 ? (
           scenarios.map((scenario, i) => (
             <ScenarioCard key={scenario.id} scenario={scenario} featured={i === 0} />
           ))
         ) : (
-          <p className="text-text-caption text-sm text-center py-8">
+          <p className="text-text-caption text-sm text-center py-8 col-span-full">
             출시된 시나리오가 없습니다
           </p>
         )}

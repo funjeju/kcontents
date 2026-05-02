@@ -150,6 +150,7 @@ export interface CradleConfig {
   type: "self_youth" | "parent_raising";
   cradleStartAge: number;
   cradleEndAge: number;
+  eraStartYear?: number; // 역사 시나리오용 시작 연도 (예: 1897)
   perspectiveTransition?: {
     defaultTransitionAge: number;
     keepParentAllowed: boolean;
