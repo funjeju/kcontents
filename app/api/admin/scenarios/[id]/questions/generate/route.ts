@@ -86,16 +86,8 @@ export async function POST(
   const prompt = buildPrompt(scenario);
 
   try {
-    const Anthropic = (await import("@anthropic-ai/sdk")).default;
-    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-
-    const message = await client.messages.create({
-      model: "claude-sonnet-4-6",
-      max_tokens: 3000,
-      messages: [{ role: "user", content: prompt }],
-    });
-
-    const text = message.content[0].type === "text" ? message.content[0].text : "";
+    const { generateText } = await import("@/lib/gemini");
+    const text = await generateText(prompt);
     const questions = parseJsonArray(text);
 
     if (!questions || questions.length === 0) {
