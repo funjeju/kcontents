@@ -1,7 +1,8 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
-import { adminAuth } from "@/lib/firebase-admin";
+import { adminAuth, adminDb } from "@/lib/firebase-admin";
+import { FieldValue } from "firebase-admin/firestore";
 import { cookies } from "next/headers";
 
 export async function POST(req: NextRequest) {
@@ -12,7 +13,21 @@ export async function POST(req: NextRequest) {
     }
 
     const expiresIn = 60 * 60 * 24 * 14 * 1000; // 14 days
-    const sessionCookie = await adminAuth.createSessionCookie(idToken, { expiresIn });
+
+    const [decodedToken, sessionCookie] = await Promise.all([
+      adminAuth.verifyIdToken(idToken),
+      adminAuth.createSessionCookie(idToken, { expiresIn }),
+    ]);
+
+    await adminDb.collection("users").doc(decodedToken.uid).set(
+      {
+        email: decodedToken.email ?? null,
+        displayName: decodedToken.name ?? null,
+        photoUrl: decodedToken.picture ?? null,
+        lastLoginAt: FieldValue.serverTimestamp(),
+      },
+      { merge: true }
+    );
 
     const cookieStore = cookies();
     cookieStore.set("session", sessionCookie, {

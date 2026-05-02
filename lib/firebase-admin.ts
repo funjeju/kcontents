@@ -28,6 +28,8 @@ export const adminAuth = {
     getAuth(getAdminApp()).verifySessionCookie(cookie, checkRevoked),
   createSessionCookie: (idToken: string, opts: { expiresIn: number }) =>
     getAuth(getAdminApp()).createSessionCookie(idToken, opts),
+  verifyIdToken: (idToken: string) =>
+    getAuth(getAdminApp()).verifyIdToken(idToken),
 };
 
 export const adminDb = {
