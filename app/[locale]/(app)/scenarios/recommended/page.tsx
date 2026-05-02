@@ -1,30 +1,25 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { ScenarioCard } from "@/components/scenarios/scenario-card";
-import { adminDb } from "@/lib/firebase-admin";
 import type { Scenario } from "@/lib/types";
 
-export const dynamic = "force-dynamic";
+export default function RecommendedPage() {
+  const [scenarios, setScenarios] = useState<Scenario[]>([]);
+  const [loading, setLoading] = useState(true);
 
-async function getPublishedScenarios(): Promise<Scenario[]> {
-  try {
-    const snap = await adminDb.collection("scenarios").get();
-    const scenarios = snap.docs.map((d) => ({ id: d.id, ...d.data() })) as Scenario[];
-    // status가 "draft"인 것만 제외, 나머지는 모두 표시
-    const visible = scenarios.filter((s) => (s as unknown as Record<string, unknown>)["status"] !== "draft");
-    return visible.sort((a, b) => {
-      const aDate = a.publishedAt ?? a.updatedAt ?? "";
-      const bDate = b.publishedAt ?? b.updatedAt ?? "";
-      return bDate.localeCompare(aDate);
-    });
-  } catch {
-    return [];
-  }
-}
-
-export default async function RecommendedPage() {
-  const scenarios = await getPublishedScenarios();
+  useEffect(() => {
+    fetch("/api/scenarios")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.error) console.error("[scenarios]", data.error);
+        setScenarios(data.scenarios ?? []);
+      })
+      .catch((e) => console.error("[scenarios fetch]", e))
+      .finally(() => setLoading(false));
+  }, []);
 
   return (
-    /* 모바일: max-w-game(480px) 중앙 / PC(lg+): 넉넉하게 1100px */
     <div className="mx-auto px-4 py-6 w-full max-w-game lg:max-w-[1100px] lg:px-8">
       {/* Header */}
       <div className="mb-6 animate-slide-up">
@@ -35,18 +30,25 @@ export default async function RecommendedPage() {
         <p className="text-text-muted text-sm mt-1">어떤 인생을 살아보시겠어요?</p>
       </div>
 
-      {/* Scenarios — 모바일 1열 / PC 3열, 최신순 */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 animate-fade-in">
-        {scenarios.length > 0 ? (
-          scenarios.map((scenario, i) => (
-            <ScenarioCard key={scenario.id} scenario={scenario} featured={i === 0} />
-          ))
-        ) : (
-          <p className="text-text-caption text-sm text-center py-8 col-span-full">
-            출시된 시나리오가 없습니다
-          </p>
-        )}
-      </div>
+      {loading ? (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="hanji-card h-48 animate-pulse bg-text/5" />
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 animate-fade-in">
+          {scenarios.length > 0 ? (
+            scenarios.map((scenario, i) => (
+              <ScenarioCard key={scenario.id} scenario={scenario} featured={i === 0} />
+            ))
+          ) : (
+            <p className="text-text-caption text-sm text-center py-8 col-span-full">
+              출시된 시나리오가 없습니다
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }
