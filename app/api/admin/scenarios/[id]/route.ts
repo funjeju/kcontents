@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { adminAuth, adminDb } from "@/lib/firebase-admin";
+import { adminAuth, adminDb, adminStorage } from "@/lib/firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
 
 async function verifyAdmin(): Promise<string | null> {
@@ -56,11 +56,47 @@ export async function PATCH(
 
   try {
     await adminDb.collection("scenarios").doc(params.id).update(updates);
+
+    // 출시 시 커버 이미지가 없으면 즉시 생성
+    if (status === "published") {
+      const doc = await adminDb.collection("scenarios").doc(params.id).get();
+      const data = doc.data() ?? {};
+      if (!data.coverImageUrl) {
+        generateAndSaveCoverImage(params.id, data).catch(() => null);
+      }
+    }
+
     return NextResponse.json({ ok: true });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : "업데이트 실패";
     return NextResponse.json({ error: msg }, { status: 500 });
   }
+}
+
+async function generateAndSaveCoverImage(
+  scenarioId: string,
+  data: Record<string, unknown>
+) {
+  const title = (data.title as { ko?: string })?.ko ?? String(data.title ?? "");
+  const era = String(data.era ?? "");
+  const description = (data.description as { ko?: string })?.ko ?? "";
+
+  const imagePrompt = `Create a cinematic K-Drama scene poster for a story titled "${title}" set in ${era}. ${description ? `Theme: ${description}.` : ""} Painterly style, dramatic lighting, Korean aesthetic, no text.`;
+
+  const { generateScenarioImage } = await import("@/lib/gemini");
+  const image = await generateScenarioImage(imagePrompt);
+  if (!image) return;
+
+  const bucket = adminStorage.bucket(process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET);
+  const filePath = `scenarios/${scenarioId}/cover.jpg`;
+  const file = bucket.file(filePath);
+  await file.save(image.data, {
+    metadata: { contentType: image.mimeType },
+    public: true,
+  });
+
+  const coverImageUrl = `https://storage.googleapis.com/${bucket.name}/${filePath}`;
+  await adminDb.collection("scenarios").doc(scenarioId).update({ coverImageUrl });
 }
 
 export async function DELETE(
