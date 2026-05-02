@@ -9,7 +9,6 @@ async function getPublishedScenarios(): Promise<Scenario[]> {
     const snap = await adminDb
       .collection("scenarios")
       .where("status", "==", "published")
-      .orderBy("createdAt", "desc")
       .get();
     return snap.docs.map((d) => ({ id: d.id, ...d.data() })) as Scenario[];
   } catch {

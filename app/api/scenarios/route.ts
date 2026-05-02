@@ -8,7 +8,6 @@ export async function GET() {
     const snap = await adminDb
       .collection("scenarios")
       .where("status", "==", "published")
-      .orderBy("createdAt", "desc")
       .get();
 
     const scenarios = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
