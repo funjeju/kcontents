@@ -10,7 +10,13 @@ async function getPublishedScenarios(): Promise<Scenario[]> {
       .collection("scenarios")
       .where("status", "==", "published")
       .get();
-    return snap.docs.map((d) => ({ id: d.id, ...d.data() })) as Scenario[];
+    const scenarios = snap.docs.map((d) => ({ id: d.id, ...d.data() })) as Scenario[];
+    // 최신순 정렬 (publishedAt 또는 updatedAt 기준)
+    return scenarios.sort((a, b) => {
+      const aDate = a.publishedAt ?? a.updatedAt ?? "";
+      const bDate = b.publishedAt ?? b.updatedAt ?? "";
+      return bDate.localeCompare(aDate);
+    });
   } catch {
     return [];
   }
@@ -31,7 +37,7 @@ export default async function RecommendedPage() {
         <p className="text-text-muted text-sm mt-1">어떤 인생을 살아보시겠어요?</p>
       </div>
 
-      {/* Scenarios — 모바일 1열 / PC 3열 */}
+      {/* Scenarios — 모바일 1열 / PC 3열, 최신순 */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 animate-fade-in">
         {scenarios.length > 0 ? (
           scenarios.map((scenario, i) => (
@@ -42,39 +48,7 @@ export default async function RecommendedPage() {
             출시된 시나리오가 없습니다
           </p>
         )}
-
-        {/* Coming soon */}
-        {COMING_SOON.map((item) => (
-          <div
-            key={item.title}
-            className="hanji-card p-5 opacity-60 border border-dashed border-text/15"
-          >
-            <div className="flex items-center gap-3 mb-2">
-              <span className="text-2xl">{item.icon}</span>
-              <div>
-                <h3 className="font-serif font-semibold text-text">{item.title}</h3>
-                <p className="text-xs text-text-caption">{item.era}</p>
-              </div>
-            </div>
-            <div className="inline-flex items-center gap-1.5 text-xs text-text-caption bg-bg rounded-full px-3 py-1 mt-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-accent-gold animate-pulse" />
-              준비 중
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Bottom */}
-      <div className="mt-8 text-center text-xs text-text-caption">
-        더 많은 시나리오가 곧 추가됩니다
       </div>
     </div>
   );
 }
-
-const COMING_SOON = [
-  { icon: "🏯", title: "Hidden Court", era: "17세기 조선 궁중" },
-  { icon: "✊", title: "Liberation", era: "일제강점기" },
-  { icon: "🏘️", title: "Reply 1988 정서", era: "1980년대 골목" },
-  { icon: "🎤", title: "Idol Trainee", era: "현대" },
-];

@@ -147,7 +147,7 @@ export default function EventPage({ params }: Props) {
   }
 
   return (
-    <div className="min-h-dvh bg-bg flex flex-col">
+    <div className="h-dvh bg-bg flex flex-col">
       <GameHeader
         chapter={chapterNum}
         age={age}
@@ -158,7 +158,7 @@ export default function EventPage({ params }: Props) {
         phase={headerPhase}
       />
 
-      <div className="flex-1 flex flex-col max-w-game mx-auto w-full px-screen-x py-6">
+      <div className="flex-1 flex flex-col max-w-game mx-auto w-full px-screen-x py-6 overflow-y-auto">
         <p className="era-label mb-4">{ageYearLabel}</p>
 
         <AnimatePresence mode="wait">
@@ -246,7 +246,7 @@ export default function EventPage({ params }: Props) {
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mt-auto pt-4"
+            className="pt-4 pb-2"
           >
             <Button size="lg" fullWidth onClick={handleNext}>
               {eventNum >= totalEvents ? "챕터 마무리 ▶" : "다음 ▶"}

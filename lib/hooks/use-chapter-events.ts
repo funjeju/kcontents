@@ -34,7 +34,8 @@ export function useChapterEvents(
       if (!cancelled && r.ok) {
         const data = await r.json();
         const firstNarrative: string = data?.events?.[0]?.narrative ?? "";
-        if (data?.events?.length > 0 && firstNarrative.length >= 100) {
+        const hasMetaPhrase = /\d+세의\s*(당신|주인공)/.test(firstNarrative);
+        if (data?.events?.length > 0 && firstNarrative.length >= 100 && !hasMetaPhrase) {
           setEvents(data.events);
           return;
         }

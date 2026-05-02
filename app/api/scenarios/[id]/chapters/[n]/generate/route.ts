@@ -22,7 +22,7 @@ function buildPrompt(scenario: Scenario, chapterNum: number, age: number, isT0: 
 다음 JSON 형식으로 정확히 1개의 이벤트를 생성하세요:
 [
   {
-    "narrative": "200~300자의 내러티브. ${age}세의 주인공이 처한 결정적 순간을 4~6문장으로 묘사. 시나리오 세계관과 시대에 완전히 맞는 구체적 상황. 감각적이고 몰입감 있게 서술.",
+    "narrative": "200~300자의 내러티브. 나이나 '당신은' 같은 메타 표현 없이, 주인공이 처한 결정적 순간을 4~6문장으로 직접 묘사. 시나리오 세계관과 시대에 완전히 맞는 구체적 상황. 감각적이고 몰입감 있게 서술.",
     "choices": [
       { "id": "A", "text": "선택지 A 텍스트 (10~20자)" },
       { "id": "B", "text": "선택지 B 텍스트 (10~20자)" },
@@ -52,7 +52,7 @@ statChanges: 각 값은 -3 ~ +3 범위. 합산 절댓값이 4~6. 순수 JSON 배
 다음 JSON 형식으로 정확히 6개의 이벤트를 생성하세요:
 [
   {
-    "narrative": "200~300자의 내러티브. ${age}세 주인공의 구체적인 상황을 4~6문장으로 묘사. 시나리오 배경에 맞는 인물/장소/갈등이 포함된 몰입감 있는 서술. 짧게 쓰지 말 것.",
+    "narrative": "200~300자의 내러티브. '몇 세의 당신은' '주인공은' 같은 메타 표현 없이, 장면 안에서 바로 시작하는 서술. 배경에 맞는 인물/장소/갈등이 드러나는 몰입감 있는 서술. 짧게 쓰지 말 것.",
     "choices": [
       { "id": "A", "text": "선택지 A 텍스트 (10~20자)" },
       { "id": "B", "text": "선택지 B 텍스트 (10~20자)" },
@@ -90,7 +90,11 @@ function parseEvents(text: string): unknown[] | null {
 
 function isTooShort(events: unknown[]): boolean {
   const first = (events[0] as Record<string, unknown>)?.narrative;
-  return typeof first === "string" && first.length < 100;
+  if (typeof first !== "string") return true;
+  if (first.length < 100) return true;
+  // 나이/메타 표현이 반복되면 재생성
+  if (/\d+세의\s*(당신|주인공)/.test(first)) return true;
+  return false;
 }
 
 export async function POST(

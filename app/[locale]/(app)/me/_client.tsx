@@ -18,6 +18,8 @@ interface LifeSummary {
   castingRole: string | null;
   completedChapters: number[];
   lastPlayedAt: string | null;
+  currentChapterId: string | null;
+  currentEventIndex: number | null;
 }
 
 
