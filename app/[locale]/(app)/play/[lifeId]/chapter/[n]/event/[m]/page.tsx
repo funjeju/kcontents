@@ -203,7 +203,7 @@ export default function EventPage({ params }: Props) {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="choices-container mt-auto"
+            className="choices-container mt-6"
           >
             <p className="text-xs text-text-caption mb-3">당신은:</p>
             {event.choices.map((choice) => (

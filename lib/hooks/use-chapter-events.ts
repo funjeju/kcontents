@@ -33,13 +33,14 @@ export function useChapterEvents(
       const r = await fetch(`/api/scenarios/${scenarioId}/chapters/${chapterNum}`);
       if (!cancelled && r.ok) {
         const data = await r.json();
-        if (data?.events?.length > 0) {
+        const firstNarrative: string = data?.events?.[0]?.narrative ?? "";
+        if (data?.events?.length > 0 && firstNarrative.length >= 100) {
           setEvents(data.events);
           return;
         }
       }
 
-      // Not in Firestore — generate on-demand
+      // Not in Firestore or narrative too short — generate on-demand
       if (!cancelled) setGenerating(true);
       const genR = await fetch(
         `/api/scenarios/${scenarioId}/chapters/${chapterNum}/generate`,
