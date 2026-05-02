@@ -26,7 +26,7 @@ export default function EventPage({ params }: Props) {
   const eventNum = parseInt(m);
 
   const { life, mutate } = useLife(lifeId);
-  const { scenario } = useScenario(life?.scenarioId);
+  const { scenario, loading: scenarioLoading } = useScenario(life?.scenarioId);
 
   const { events: firestoreEvents, loading: eventsLoading, generating } = useChapterEvents(
     life?.scenarioId,
@@ -39,10 +39,21 @@ export default function EventPage({ params }: Props) {
   const [saving, setSaving] = useState(false);
   const [liveStats, setLiveStats] = useState<Stats | null>(null);
 
-  // Derive cradle config from scenario (fall back to safe defaults)
-  const cradleStartAge = scenario?.cradleConfig?.cradleStartAge ?? life?.age ?? 12;
-  const cradleEndAge = scenario?.cradleConfig?.cradleEndAge ?? (cradleStartAge + 3);
-  const eraStartYear = scenario?.cradleConfig?.eraStartYear ?? null;
+  const baseStats = life?.stats ?? initStats(10);
+  const stats = liveStats ?? baseStats;
+
+  // Scenario가 로드되기 전까지는 스피너만 표시 (잘못된 나이 플래시 방지)
+  if (!life || scenarioLoading || !scenario) {
+    return (
+      <div className="min-h-dvh bg-bg flex items-center justify-center">
+        <div className="w-6 h-6 border-2 border-text-caption border-t-text rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  const cradleStartAge = scenario.cradleConfig.cradleStartAge;
+  const cradleEndAge = scenario.cradleConfig.cradleEndAge;
+  const eraStartYear = scenario.cradleConfig.eraStartYear ?? null;
   const t0Chapter = cradleEndAge - cradleStartAge + 1;
 
   const age = cradleStartAge + chapterNum - 1;
@@ -55,8 +66,6 @@ export default function EventPage({ params }: Props) {
     : null;
 
   const totalEvents = eventPool?.length ?? 6;
-  const baseStats = life?.stats ?? initStats(10);
-  const stats = liveStats ?? baseStats;
 
   async function handleChoice(choiceId: string) {
     if (phase !== "choosing") return;

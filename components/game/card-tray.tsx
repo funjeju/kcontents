@@ -54,7 +54,8 @@ export function CardTray({
     if (usedCardIds.has(card.id)) return false;
     if (card.usageTiming === "anytime") return true;
     if (card.usageTiming === "stat_warning") {
-      return Object.values(stats).some((v) => v <= 3 || v >= 17);
+      // 스탯 최대 50 기준 — hard warning 임계값과 동일하게 맞춤
+      return Object.values(stats).some((v) => v <= 3 || v >= 47);
     }
     return false;
   }

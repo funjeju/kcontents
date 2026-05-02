@@ -5,6 +5,7 @@ import { useRouter } from "@/i18n/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useLife } from "@/lib/hooks/use-life";
+import { useScenario } from "@/lib/hooks/use-scenario";
 import { STANDARD_CARDS, CARD_CATEGORY_LABELS, CARD_RARITY_LABELS, CARD_TIMING_LABELS } from "@/data/cards";
 import type { GameCard } from "@/lib/types";
 
@@ -18,6 +19,7 @@ export default function CardSelectionPage({ params }: Props) {
   const router = useRouter();
   const { lifeId } = params;
   const { life } = useLife(lifeId);
+  const { scenario } = useScenario(life?.scenarioId);
 
   const [allCards, setAllCards] = useState<GameCard[]>([]);
   const [selected, setSelected] = useState<string[]>([]);
@@ -67,7 +69,12 @@ export default function CardSelectionPage({ params }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ selectedCards: selected }),
       });
-      router.push(`/play/${lifeId}/chapter/5/intro`);
+      // T-0 챕터 다음 챕터로 이동 (시나리오 cradleConfig 기준)
+      const cradleStartAge = scenario?.cradleConfig?.cradleStartAge ?? 12;
+      const cradleEndAge = scenario?.cradleConfig?.cradleEndAge ?? 15;
+      const t0Chapter = cradleEndAge - cradleStartAge + 1;
+      const firstMainChapter = t0Chapter + 1;
+      router.push(`/play/${lifeId}/chapter/${firstMainChapter}/intro`);
     } catch {
       setSaving(false);
     }

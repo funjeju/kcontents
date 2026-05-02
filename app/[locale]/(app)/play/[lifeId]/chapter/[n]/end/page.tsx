@@ -21,10 +21,10 @@ export default function ChapterEndPage({ params }: Props) {
   const chapter = parseInt(n);
 
   const { life } = useLife(lifeId);
-  const { scenario } = useScenario(life?.scenarioId);
+  const { scenario, loading: scenarioLoading } = useScenario(life?.scenarioId);
 
-  const cradleStartAge = scenario?.cradleConfig?.cradleStartAge ?? 12;
-  const cradleEndAge = scenario?.cradleConfig?.cradleEndAge ?? 15;
+  const cradleStartAge = scenario?.cradleConfig?.cradleStartAge ?? 0;
+  const cradleEndAge = scenario?.cradleConfig?.cradleEndAge ?? 0;
   const eraStartYear = scenario?.cradleConfig?.eraStartYear ?? null;
   const t0Chapter = cradleEndAge - cradleStartAge + 1;
 
@@ -39,7 +39,8 @@ export default function ChapterEndPage({ params }: Props) {
   const [chapterLocations, setChapterLocations] = useState<{ nameKo: string; guideNote: string }[]>([]);
 
   useEffect(() => {
-    if (!life || savedRef.current) return;
+    // scenario가 로드되어야 age가 정확해짐
+    if (!life || !scenario || savedRef.current) return;
     savedRef.current = true;
 
     const aging = applyNaturalAgingStats(stats, age);
@@ -70,7 +71,7 @@ export default function ChapterEndPage({ params }: Props) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(updates),
     }).catch(() => {});
-  }, [life]); // eslint-disable-line
+  }, [life, scenario]); // eslint-disable-line
 
   useEffect(() => {
     if (!life?.scenarioId) return;
@@ -84,7 +85,7 @@ export default function ChapterEndPage({ params }: Props) {
       .catch(() => {});
   }, [life?.scenarioId, age]); // eslint-disable-line
 
-  if (!life) {
+  if (!life || scenarioLoading || !scenario) {
     return (
       <div className="min-h-dvh bg-bg flex items-center justify-center">
         <div className="w-6 h-6 border-2 border-text-caption border-t-text rounded-full animate-spin" />

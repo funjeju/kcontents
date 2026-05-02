@@ -25,17 +25,26 @@ export default function FreeformPage({ params }: Props) {
   const [result, setResult] = useState<{ narrative: string; statChanges: Record<string, number> } | null>(null);
 
   const { life } = useLife(lifeId);
-  const { scenario } = useScenario(life?.scenarioId);
+  const { scenario, loading: scenarioLoading } = useScenario(life?.scenarioId);
 
   const chapter = parseInt(n);
-  const cradleStartAge = scenario?.cradleConfig?.cradleStartAge ?? 12;
-  const cradleEndAge = scenario?.cradleConfig?.cradleEndAge ?? 15;
-  const eraStartYear = scenario?.cradleConfig?.eraStartYear ?? null;
+  const stats = life?.stats ?? initStats(10);
+
+  if (!life || scenarioLoading || !scenario) {
+    return (
+      <div className="min-h-dvh bg-bg flex items-center justify-center">
+        <div className="w-6 h-6 border-2 border-text-caption border-t-text rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  const cradleStartAge = scenario.cradleConfig.cradleStartAge;
+  const cradleEndAge = scenario.cradleConfig.cradleEndAge;
+  const eraStartYear = scenario.cradleConfig.eraStartYear ?? null;
   const t0Chapter = cradleEndAge - cradleStartAge + 1;
 
   const age = cradleStartAge + chapter - 1;
   const year = eraStartYear != null ? eraStartYear + chapter - 1 : null;
-  const stats = life?.stats ?? initStats(10);
   const phase = chapter <= t0Chapter ? "cradle" : "main";
 
   async function handleSubmit() {
