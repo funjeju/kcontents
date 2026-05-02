@@ -1,7 +1,33 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { adminAuth, adminDb } from "@/lib/firebase-admin";
+import { adminAuth, adminDb, adminStorage } from "@/lib/firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
+
+async function generateAndSaveCoverImage(
+  scenarioId: string,
+  scenario: Record<string, unknown>
+) {
+  const title = (scenario.title as { ko?: string })?.ko ?? String(scenario.title ?? "");
+  const era = String(scenario.era ?? "");
+  const description = (scenario.description as { ko?: string })?.ko ?? "";
+
+  const imagePrompt = `Create a cinematic K-Drama scene poster for a story titled "${title}" set in ${era}. ${description ? `Theme: ${description}.` : ""} Painterly style, dramatic lighting, Korean aesthetic, no text.`;
+
+  const { generateScenarioImage } = await import("@/lib/gemini");
+  const image = await generateScenarioImage(imagePrompt);
+  if (!image) return;
+
+  const bucket = adminStorage.bucket(process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET);
+  const filePath = `scenarios/${scenarioId}/cover.jpg`;
+  const file = bucket.file(filePath);
+  await file.save(image.data, {
+    metadata: { contentType: image.mimeType },
+    public: true,
+  });
+
+  const coverImageUrl = `https://storage.googleapis.com/${bucket.name}/${filePath}`;
+  await adminDb.collection("scenarios").doc(scenarioId).update({ coverImageUrl });
+}
 
 async function verifyAdmin(): Promise<string | null> {
   const session = cookies().get("session")?.value;
@@ -38,6 +64,9 @@ export async function POST(req: NextRequest) {
       updatedAt: now,
       createdBy: uid,
     });
+
+    // 커버 이미지 자동 생성 (백그라운드, 실패해도 저장은 완료)
+    generateAndSaveCoverImage(scenarioId, scenario).catch(() => null);
 
     return NextResponse.json({ scenarioId });
   } catch (e: unknown) {
