@@ -31,7 +31,23 @@ export async function POST(
   const era = String(data.era ?? "");
   const description = (data.description as { ko?: string })?.ko ?? "";
 
-  const imagePrompt = `Korean webtoon manhwa illustration style poster for "${title}" set in ${era}. ${description ? description + "." : ""} Anime art style, vibrant saturated colors, expressive character design, soft cel-shading, detailed Korean traditional background, cinematic composition, no text, no watermark, no logo.`;
+  const imagePrompt = `Create a dramatic anime illustration poster for the following story. Choose the single most fitting visual style from the options below based on the story's mood, era, and genre — then apply it consistently throughout the image.
+
+Story: "${title}" — ${era}
+${description ? `Context: ${description}` : ""}
+
+Visual style options (pick one that best fits):
+• Style A — Makoto Shinkai (Your Name / Weathering With You): photorealistic backgrounds, hyper-detailed skies, emotional lighting, modern or semi-modern setting, bittersweet mood
+• Style B — Demon Slayer (Kimetsu no Yaiba): high-contrast dramatic lighting, bold color gradients, intense action energy, historical setting, cinematic flair
+• Style C — Violet Evergarden: soft pastel palette, warm golden light, period drama atmosphere, delicate character expressions, European or formal historical setting
+• Style D — Vinland Saga / Kingdom: gritty realism, muted earthy tones, detailed historical accuracy, serious dramatic weight
+• Style E — Wolf Children / Summer Wars (Mamoru Hosoda): warm family-drama feel, naturalistic light, everyday life elevated to beauty, emotional warmth
+
+Rules:
+- Costumes, architecture, and environment must match the actual historical period and geographic setting of the story — never substitute a different culture's aesthetics
+- No text, no watermark, no logo
+- Cinematic portrait/poster composition`;
+
 
   try {
     const { generateScenarioImage } = await import("@/lib/gemini");

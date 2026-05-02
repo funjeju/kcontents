@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useLocale } from "next-intl";
 import type { Stats } from "@/lib/types";
 
 export interface ChapterEvent {
@@ -16,6 +17,7 @@ export function useChapterEvents(
   scenarioId: string | null | undefined,
   chapterNum: number
 ): { events: ChapterEvent[] | null; loading: boolean; generating: boolean; error: boolean; retry: () => void } {
+  const locale = useLocale();
   const [events, setEvents] = useState<ChapterEvent[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
@@ -30,17 +32,16 @@ export function useChapterEvents(
   }, []);
 
   useEffect(() => {
-    if (!scenarioId) {
-      setLoading(false);
-      return;
-    }
+    if (!scenarioId) { setLoading(false); return; }
     let cancelled = false;
     setLoading(true);
     setGenerating(false);
     setError(false);
 
+    const localeParam = locale === "en" ? "?locale=en" : "";
+
     async function load() {
-      const r = await fetch(`/api/scenarios/${scenarioId}/chapters/${chapterNum}`);
+      const r = await fetch(`/api/scenarios/${scenarioId}/chapters/${chapterNum}${localeParam}`);
       if (!cancelled && r.ok) {
         const data = await r.json();
         const firstNarrative: string = data?.events?.[0]?.narrative ?? "";
@@ -53,7 +54,7 @@ export function useChapterEvents(
 
       if (!cancelled) setGenerating(true);
       const genR = await fetch(
-        `/api/scenarios/${scenarioId}/chapters/${chapterNum}/generate`,
+        `/api/scenarios/${scenarioId}/chapters/${chapterNum}/generate${localeParam}`,
         { method: "POST" }
       );
       if (!cancelled) {
@@ -72,16 +73,11 @@ export function useChapterEvents(
     }
 
     load()
-      .catch(() => {
-        if (!cancelled) {
-          setError(true);
-          setGenerating(false);
-        }
-      })
+      .catch(() => { if (!cancelled) { setError(true); setGenerating(false); } })
       .finally(() => { if (!cancelled) setLoading(false); });
 
     return () => { cancelled = true; };
-  }, [scenarioId, chapterNum, retryCount]);
+  }, [scenarioId, chapterNum, locale, retryCount]);
 
   return { events, loading, generating, error, retry };
 }

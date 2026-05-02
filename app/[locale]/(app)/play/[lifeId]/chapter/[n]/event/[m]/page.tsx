@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "@/i18n/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import { useLife } from "@/lib/hooks/use-life";
 import { useScenario } from "@/lib/hooks/use-scenario";
 import { useChapterEvents } from "@/lib/hooks/use-chapter-events";
@@ -23,6 +24,9 @@ type Phase = "reading" | "choosing" | "result" | "done";
 
 export default function EventPage({ params }: Props) {
   const router = useRouter();
+  const tg = useTranslations("game");
+  const locale = useLocale();
+  const isEn = locale === "en";
   const { lifeId, n, m } = params;
   const chapterNum = parseInt(n);
   const eventNum = parseInt(m);
@@ -140,17 +144,21 @@ export default function EventPage({ params }: Props) {
           <p className="era-label mb-4">{ageYearLabel}</p>
           {eventsError ? (
             <div className="flex flex-col items-center justify-center flex-1 gap-4">
-              <p className="text-text-muted text-sm">이야기를 불러오지 못했어요</p>
+              <p className="text-text-muted text-sm">
+                {isEn ? "Failed to load story" : "이야기를 불러오지 못했어요"}
+              </p>
               <button
                 onClick={retryEvents}
                 className="px-4 py-2 text-sm rounded-full border border-text/20 text-text hover:border-text/40 transition-colors"
               >
-                다시 시도
+                {tg("next") ? (isEn ? "Retry" : "다시 시도") : "다시 시도"}
               </button>
             </div>
           ) : generating ? (
             <div className="space-y-2">
-              <p className="text-xs text-text-caption animate-pulse">이야기를 생성하고 있습니다...</p>
+              <p className="text-xs text-text-caption animate-pulse">
+                {isEn ? "Generating your story..." : "이야기를 생성하고 있습니다..."}
+              </p>
               <div className="space-y-3 animate-pulse">
                 <div className="h-4 bg-text/10 rounded w-3/4" />
                 <div className="h-4 bg-text/10 rounded w-full" />
@@ -258,7 +266,7 @@ export default function EventPage({ params }: Props) {
             animate={{ opacity: 1 }}
             className="choices-container mt-6"
           >
-            <p className="text-xs text-text-caption mb-3">당신은:</p>
+            <p className="text-xs text-text-caption mb-3">{tg("yourChoice")}</p>
             {event.choices.map((choice) => (
               <ChoiceButton
                 key={choice.id}
@@ -293,7 +301,7 @@ export default function EventPage({ params }: Props) {
             className="pt-4 pb-2"
           >
             <Button size="lg" fullWidth onClick={handleNext}>
-              {eventNum >= totalEvents ? "챕터 마무리 ▶" : "다음 ▶"}
+              {eventNum >= totalEvents ? tg("chapterEnd") : tg("next")}
             </Button>
           </motion.div>
         )}

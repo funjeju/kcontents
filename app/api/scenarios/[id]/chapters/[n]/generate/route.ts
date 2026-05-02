@@ -5,11 +5,84 @@ import { adminDb } from "@/lib/firebase-admin";
 import { generateText } from "@/lib/gemini";
 import type { Scenario } from "@/lib/types";
 
-function buildPrompt(scenario: Scenario, chapterNum: number, age: number, isT0: boolean): string {
-  const title = scenario.title?.ko ?? "시나리오";
-  const description = scenario.description?.ko ?? "";
+function buildPrompt(scenario: Scenario, chapterNum: number, age: number, isT0: boolean, locale: string): string {
+  const isEn = locale === "en";
+  const title = isEn
+    ? (scenario.title?.en ?? scenario.title?.ko ?? "Scenario")
+    : (scenario.title?.ko ?? "시나리오");
+  const description = isEn
+    ? (scenario.description?.en ?? scenario.description?.ko ?? "")
+    : (scenario.description?.ko ?? "");
   const era = scenario.era ?? "";
 
+  if (isEn) {
+    if (isT0) {
+      return `You are an event designer for a K-Drama Life game.
+
+Scenario: "${title}" (${era})
+Description: ${description}
+
+Chapter ${chapterNum} is the T-0 moment — the fateful decision the protagonist faces at age ${age}.
+Only 1 event is needed for this chapter.
+
+Generate exactly 1 event in this JSON format:
+[
+  {
+    "narrative": "200-300 character narrative. No meta phrases like 'at age X, you...' — start directly inside the scene. 4-6 vivid, immersive sentences that fit the scenario's world and era.",
+    "choices": [
+      { "id": "A", "text": "Choice A text (10-25 chars)" },
+      { "id": "B", "text": "Choice B text (10-25 chars)" },
+      { "id": "C", "text": "(Write your own thoughts)" }
+    ],
+    "outcomes": {
+      "A": { "statChanges": { "intellect": 0, "creativity": 0, "emotion": 0, "physique": 0, "sociability": 0, "morality": 0 }, "resultNarrative": "Result in 2-3 sentences, 60-100 chars" },
+      "B": { "statChanges": { "intellect": 0, "creativity": 0, "emotion": 0, "physique": 0, "sociability": 0, "morality": 0 }, "resultNarrative": "Result in 2-3 sentences, 60-100 chars" }
+    }
+  }
+]
+
+statChanges: each value -3 to +3 range. Total absolute sum 4-6. Output pure JSON array only.`;
+    }
+
+    return `You are an event designer for a K-Drama Life game.
+
+Scenario: "${title}" (${era})
+Description: ${description}
+
+Chapter ${chapterNum}: the protagonist lives through age ${age}.
+Generate 6 events that fully match this scenario's world and atmosphere.
+
+Each event must fit this scenario's setting/era/profession/environment exactly.
+Do not mix in content from other scenarios.
+
+Generate exactly 6 events in this JSON format:
+[
+  {
+    "narrative": "200-300 character narrative. No meta phrases like 'at age X, you...' — start directly inside the scene. Include specific characters, places, and conflict that fit the scenario background. Do not write it short.",
+    "choices": [
+      { "id": "A", "text": "Choice A text (10-25 chars)" },
+      { "id": "B", "text": "Choice B text (10-25 chars)" },
+      { "id": "C", "text": "(Write your own thoughts)" }
+    ],
+    "outcomes": {
+      "A": { "statChanges": { "intellect": 0, "creativity": 0, "emotion": 0, "physique": 0, "sociability": 0, "morality": 0 }, "resultNarrative": "Result in 2-3 sentences, 60-100 chars" },
+      "B": { "statChanges": { "intellect": 0, "creativity": 0, "emotion": 0, "physique": 0, "sociability": 0, "morality": 0 }, "resultNarrative": "Result in 2-3 sentences, 60-100 chars" }
+    }
+  }
+]
+
+statChanges rules:
+- Each value -3 to +3. Total absolute sum per event: 4-6.
+- Vary the primary stats per event:
+  Event1: intellect/creativity | Event2: sociability/emotion
+  Event3: physique/morality | Event4: creativity/morality
+  Event5: emotion/intellect | Event6: physique/sociability
+- No single stat should increase in all 6 events.
+- Choice A and B must affect different stats.
+Output pure JSON array only. No code blocks.`;
+  }
+
+  // Korean prompts (unchanged)
   if (isT0) {
     return `당신은 K-Drama Life 게임의 이벤트 설계자입니다.
 
@@ -91,8 +164,7 @@ function parseEvents(text: string): unknown[] | null {
 function isTooShort(events: unknown[]): boolean {
   const first = (events[0] as Record<string, unknown>)?.narrative;
   if (typeof first !== "string") return true;
-  if (first.length < 100) return true;
-  // 나이/메타 표현이 반복되면 재생성
+  if (first.length < 80) return true;
   if (/\d+세의\s*(당신|주인공)/.test(first)) return true;
   return false;
 }
@@ -102,22 +174,24 @@ export async function POST(
   { params }: { params: { id: string; n: string } }
 ) {
   const force = req.nextUrl.searchParams.get("force") === "true";
+  const locale = req.nextUrl.searchParams.get("locale") ?? "ko";
+  const eventsField = locale === "en" ? "eventsEn" : "events";
 
   try {
     const chapterRef = adminDb
       .collection("scenarios").doc(params.id)
       .collection("chapters").doc(params.n);
 
-    // Return existing if already generated with adequate length
     if (!force) {
       const existing = await chapterRef.get();
+      const cached = existing.data()?.[eventsField];
       if (
         existing.exists &&
-        Array.isArray(existing.data()?.events) &&
-        existing.data()!.events.length > 0 &&
-        !isTooShort(existing.data()!.events)
+        Array.isArray(cached) &&
+        cached.length > 0 &&
+        !isTooShort(cached)
       ) {
-        return NextResponse.json({ events: existing.data()!.events });
+        return NextResponse.json({ events: cached });
       }
     }
 
@@ -132,12 +206,18 @@ export async function POST(
     const t0Chapter = cradleEndAge - cradleStartAge + 1;
     const isT0 = chapterNum === t0Chapter;
 
-    const prompt = buildPrompt(scenario, chapterNum, age, isT0);
+    const prompt = buildPrompt(scenario, chapterNum, age, isT0, locale);
     const text = await generateText(prompt);
     const events = parseEvents(text);
 
     if (events && events.length > 0) {
-      await chapterRef.set({ events, generatedAt: new Date().toISOString() });
+      // 기존 필드를 유지하면서 locale별 필드만 업데이트
+      const existing = await chapterRef.get();
+      if (existing.exists) {
+        await chapterRef.update({ [eventsField]: events, generatedAt: new Date().toISOString() });
+      } else {
+        await chapterRef.set({ [eventsField]: events, generatedAt: new Date().toISOString() });
+      }
     }
 
     return NextResponse.json({ events: events ?? null });

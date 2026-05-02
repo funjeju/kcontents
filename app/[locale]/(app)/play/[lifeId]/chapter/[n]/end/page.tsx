@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "@/i18n/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useLife } from "@/lib/hooks/use-life";
@@ -17,6 +18,9 @@ interface Props {
 
 export default function ChapterEndPage({ params }: Props) {
   const router = useRouter();
+  const tg = useTranslations("game");
+  const locale = useLocale();
+  const isEn = locale === "en";
   const { lifeId, n } = params;
   const chapter = parseInt(n);
 
@@ -126,7 +130,9 @@ export default function ChapterEndPage({ params }: Props) {
 
         <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
           <p className="era-label mb-1">{ageYearLabel}</p>
-          <h1 className="font-serif text-2xl font-bold text-text">챕터 {chapter} 마무리</h1>
+          <h1 className="font-serif text-2xl font-bold text-text">
+            {isEn ? `Chapter ${chapter} — End` : `챕터 ${chapter} 마무리`}
+          </h1>
         </motion.div>
 
         {/* 이 해의 기록 */}
@@ -134,7 +140,9 @@ export default function ChapterEndPage({ params }: Props) {
           initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
           className="hanji-card p-5 mb-5 border-l-2 border-accent-maple/40"
         >
-          <p className="text-xs text-text-caption mb-3 font-medium uppercase tracking-wider">이 해의 기록</p>
+          <p className="text-xs text-text-caption mb-3 font-medium uppercase tracking-wider">
+            {isEn ? "This Year's Record" : "이 해의 기록"}
+          </p>
           <div className="space-y-2">
             {getChapterSummary(chapter, age, year, isT0Chapter, scenario?.title?.ko).map((line, i) => (
               <p key={i} className="narrative-text text-sm leading-relaxed">{line}</p>
@@ -147,8 +155,10 @@ export default function ChapterEndPage({ params }: Props) {
           initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
           className="hanji-card p-5 mb-5"
         >
-          <p className="text-xs text-text-caption mb-4 font-medium uppercase tracking-wider">현재 성장 지표</p>
-          <StatWarningGrid stats={agedStats} />
+          <p className="text-xs text-text-caption mb-4 font-medium uppercase tracking-wider">
+            {tg("statsSnapshot")}
+          </p>
+          <StatWarningGrid stats={agedStats} isEn={isEn} />
         </motion.div>
 
         {/* 스탯 상호작용 뱃지 */}
@@ -202,14 +212,18 @@ export default function ChapterEndPage({ params }: Props) {
             className="hanji-card p-4 mb-5 border border-accent-gold/30 bg-accent-gold/5"
           >
             <p className="text-sm text-text-muted leading-relaxed text-center font-serif italic">
-              "이제 당신이 누구인지 알게 될 시간이 왔다."
+              {isEn
+                ? '"The time has come to discover who you truly are."'
+                : '"이제 당신이 누구인지 알게 될 시간이 왔다."'}
             </p>
           </motion.div>
         )}
 
         <div className="mt-auto">
           <Button size="lg" fullWidth onClick={handleNext}>
-            {isT0Chapter ? "T-0 모먼트로 ▶" : `${chapter + 1}챕터로 ▶`}
+            {isT0Chapter
+              ? (isEn ? "T-0 Moment ▶" : "T-0 모먼트로 ▶")
+              : (isEn ? `Chapter ${chapter + 1} ▶` : `${chapter + 1}챕터로 ▶`)}
           </Button>
         </div>
       </div>
@@ -217,7 +231,7 @@ export default function ChapterEndPage({ params }: Props) {
   );
 }
 
-function StatWarningGrid({ stats }: { stats: Stats }) {
+function StatWarningGrid({ stats, isEn }: { stats: Stats; isEn: boolean }) {
   return (
     <div className="space-y-2">
       {(Object.entries(stats) as [StatKey, number][]).map(([key, val]) => {
@@ -229,14 +243,18 @@ function StatWarningGrid({ stats }: { stats: Stats }) {
           <div key={key}>
             <div className="flex justify-between items-center mb-1">
               <span className="text-xs text-text-caption">
-                {label.icon} {label.ko}
+                {label.icon} {isEn ? label.en : label.ko}
               </span>
               <div className="flex items-center gap-2">
                 {warning === "hard" && (
-                  <span className="text-xs text-red-400 font-medium animate-pulse">위험</span>
+                  <span className="text-xs text-red-400 font-medium animate-pulse">
+                    {isEn ? "Danger" : "위험"}
+                  </span>
                 )}
                 {warning === "soft" && (
-                  <span className="text-xs text-amber-400 font-medium">주의</span>
+                  <span className="text-xs text-amber-400 font-medium">
+                    {isEn ? "Warning" : "주의"}
+                  </span>
                 )}
                 <span className="text-xs text-text-caption font-mono">{val}</span>
               </div>
@@ -244,18 +262,22 @@ function StatWarningGrid({ stats }: { stats: Stats }) {
             <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
               <div
                 className={`h-full rounded-full transition-all ${
-                  warning === "hard"
-                    ? "bg-red-500"
-                    : warning === "soft"
-                    ? "bg-amber-400"
-                    : "bg-accent-jade"
+                  warning === "hard" ? "bg-red-500" : warning === "soft" ? "bg-amber-400" : "bg-accent-jade"
                 }`}
                 style={{ width: `${pct}%` }}
               />
             </div>
             {warning !== "none" && (
               <p className={`text-xs mt-0.5 ${warning === "hard" ? "text-red-400" : "text-amber-400"}`}>
-                {warning === "hard"
+                {isEn
+                  ? warning === "hard"
+                    ? val >= 47
+                      ? "Extreme imbalance — your soul is tilting to one side."
+                      : "Standing on the edge of danger."
+                    : val >= 40
+                    ? "Too much light creates shadow."
+                    : "If this weakens further, it becomes dangerous."
+                  : warning === "hard"
                   ? val >= 47
                     ? "지나친 빛은 그림자를 만든다. 당신의 영혼이 한쪽으로 기울고 있다."
                     : "위태로운 경계에 서 있다."

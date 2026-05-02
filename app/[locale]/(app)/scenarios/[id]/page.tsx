@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { notFound } from "next/navigation";
+import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { Star, Users, Clock, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,34 +9,41 @@ import { Badge } from "@/components/ui/badge";
 import { adminDb } from "@/lib/firebase-admin";
 import type { Scenario } from "@/lib/types";
 
-const GENRE_LABELS: Record<string, string> = {
-  historical: "사극",
-  action: "액션",
-  romance: "로맨스",
-  modern: "근현대",
-  modern_romance: "현대 로맨스",
-  mystery: "추리",
-  fantasy: "판타지",
-  idol: "아이돌",
+const GENRE_LABELS: Record<string, { ko: string; en: string }> = {
+  historical:     { ko: "사극",       en: "Historical" },
+  action:         { ko: "액션",       en: "Action" },
+  romance:        { ko: "로맨스",     en: "Romance" },
+  modern:         { ko: "근현대",     en: "Modern" },
+  modern_romance: { ko: "현대 로맨스", en: "Romance" },
+  mystery:        { ko: "추리",       en: "Mystery" },
+  fantasy:        { ko: "판타지",     en: "Fantasy" },
+  idol:           { ko: "아이돌",     en: "Idol" },
+  legal:          { ko: "법정",       en: "Legal" },
+  strategy:       { ko: "전략",       en: "Strategy" },
+  drama:          { ko: "드라마",     en: "Drama" },
 };
-
-interface Props {
-  params: { id: string };
-}
 
 async function getScenario(id: string): Promise<Scenario | null> {
   try {
     const doc = await adminDb.collection("scenarios").doc(id).get();
     if (!doc.exists) return null;
-    return { id: doc.id, ...doc.data() } as Scenario;
+    return JSON.parse(JSON.stringify({ id: doc.id, ...doc.data() })) as Scenario;
   } catch {
     return null;
   }
 }
 
-export default async function ScenarioDetailPage({ params }: Props) {
-  const scenario = await getScenario(params.id);
+export default async function ScenarioDetailPage({ params }: { params: { id: string } }) {
+  const [scenario, locale, t] = await Promise.all([
+    getScenario(params.id),
+    getLocale(),
+    getTranslations("scenarios"),
+  ]);
   if (!scenario) notFound();
+
+  const isEn = locale === "en";
+  const loc = (field: { ko?: string; en?: string } | undefined) =>
+    field ? (isEn ? (field.en ?? field.ko ?? "") : (field.ko ?? "")) : "";
 
   const startAge = scenario.cradleConfig?.cradleStartAge ?? 0;
   const endAge = scenario.cradleConfig?.cradleEndAge ?? 0;
@@ -53,7 +61,7 @@ export default async function ScenarioDetailPage({ params }: Props) {
             className="flex items-center gap-1.5 text-sm text-text-muted hover:text-text transition-colors"
           >
             <ChevronLeft size={18} />
-            돌아가기
+            {isEn ? "Back" : "돌아가기"}
           </Link>
         </div>
       </div>
@@ -64,7 +72,7 @@ export default async function ScenarioDetailPage({ params }: Props) {
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={scenario.coverImageUrl}
-            alt={scenario.title?.ko ?? ""}
+            alt={loc(scenario.title)}
             className="w-full h-full object-cover"
           />
         ) : (
@@ -80,14 +88,18 @@ export default async function ScenarioDetailPage({ params }: Props) {
         <div className="mb-5 animate-slide-up">
           <div className="flex flex-wrap gap-1.5 mb-3">
             {Array.isArray(scenario.genre) && scenario.genre.map((g) => (
-              <Badge key={g} variant="muted">{GENRE_LABELS[g] ?? g}</Badge>
+              <Badge key={g} variant="muted">
+                {isEn ? (GENRE_LABELS[g]?.en ?? g) : (GENRE_LABELS[g]?.ko ?? g)}
+              </Badge>
             ))}
             {scenario.heaviness != null && (
-              <Badge variant="maple">무게 {"●".repeat(scenario.heaviness)}{"○".repeat(5 - scenario.heaviness)}</Badge>
+              <Badge variant="maple">
+                {isEn ? "Weight" : "무게"} {"●".repeat(scenario.heaviness)}{"○".repeat(5 - scenario.heaviness)}
+              </Badge>
             )}
           </div>
-          <h1 className="font-serif text-2xl font-bold text-text mb-1">{scenario.title?.ko}</h1>
-          <p className="text-text-muted text-sm">{scenario.subtitle?.ko}</p>
+          <h1 className="font-serif text-2xl font-bold text-text mb-1">{loc(scenario.title)}</h1>
+          <p className="text-text-muted text-sm">{loc(scenario.subtitle)}</p>
 
           <div className="flex items-center gap-4 mt-3 text-sm text-text-caption">
             {scenario.averageRating != null && (
@@ -99,40 +111,54 @@ export default async function ScenarioDetailPage({ params }: Props) {
             {scenario.totalPlays != null && (
               <div className="flex items-center gap-1">
                 <Users size={13} />
-                <span>{scenario.totalPlays.toLocaleString()}명</span>
+                <span>{scenario.totalPlays.toLocaleString()}{isEn ? " players" : "명"}</span>
               </div>
             )}
             <div className="flex items-center gap-1">
               <Clock size={13} />
-              <span>{totalChapters}챕터</span>
+              <span>{totalChapters}{isEn ? " ch" : "챕터"}</span>
             </div>
           </div>
         </div>
 
         {/* Description */}
-        {scenario.description?.ko && (
+        {(loc(scenario.description)) && (
           <div className="hanji-card p-5 mb-5 animate-fade-in">
-            <h2 className="font-serif font-semibold text-text mb-2">이야기 배경</h2>
-            <p className="text-sm text-text-muted leading-relaxed">{scenario.description.ko}</p>
+            <h2 className="font-serif font-semibold text-text mb-2">
+              {t("storyBackground")}
+            </h2>
+            <p className="text-sm text-text-muted leading-relaxed">{loc(scenario.description)}</p>
           </div>
         )}
 
         {/* Cradle info */}
         {endAge > 0 && (
           <div className="hanji-card p-5 mb-5">
-            <h2 className="font-serif font-semibold text-text mb-3">Pre-Story Cradle</h2>
+            <h2 className="font-serif font-semibold text-text mb-3">{t("cradleInfo")}</h2>
             <div className="space-y-2 text-sm text-text-muted">
               <div className="flex items-center gap-2">
                 <span className="text-accent-maple text-xs">●</span>
-                <span>{startAge}세부터 {endAge}세까지 ({cradleYears}년) — 어린 시절을 살아갑니다</span>
+                <span>
+                  {isEn
+                    ? `Ages ${startAge}–${endAge} (${cradleYears} years) — live your childhood`
+                    : `${startAge}세부터 ${endAge}세까지 (${cradleYears}년) — 어린 시절을 살아갑니다`}
+                </span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-accent-jade text-xs">●</span>
-                <span>{endAge}세 T-0 모먼트 — 캐스팅이 결정됩니다</span>
+                <span>
+                  {isEn
+                    ? `Age ${endAge} T-0 Moment — casting is decided`
+                    : `${endAge}세 T-0 모먼트 — 캐스팅이 결정됩니다`}
+                </span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-accent-gold text-xs">●</span>
-                <span>Main Story — {endAge}세부터 {mainEndAge}세까지</span>
+                <span>
+                  {isEn
+                    ? `Main Story — ages ${endAge} to ${mainEndAge}`
+                    : `Main Story — ${endAge}세부터 ${mainEndAge}세까지`}
+                </span>
               </div>
             </div>
           </div>
@@ -142,7 +168,7 @@ export default async function ScenarioDetailPage({ params }: Props) {
         {Array.isArray(scenario.castingRoles) && scenario.castingRoles.length > 0 && (
           <div className="hanji-card p-5 mb-5">
             <h2 className="font-serif font-semibold text-text mb-3">
-              당신은 어떤 사람이 될 수 있을까요?
+              {t("castingPool")}
             </h2>
             <div className="space-y-3">
               {scenario.castingRoles.map((role) => (
@@ -151,8 +177,8 @@ export default async function ScenarioDetailPage({ params }: Props) {
                     ?
                   </div>
                   <div>
-                    <p className="font-medium text-sm text-text">{role.name?.ko}</p>
-                    <p className="text-xs text-text-caption">조건 미공개</p>
+                    <p className="font-medium text-sm text-text">{loc(role.name)}</p>
+                    <p className="text-xs text-text-caption">{t("conditionHidden")}</p>
                   </div>
                 </div>
               ))}
@@ -163,13 +189,13 @@ export default async function ScenarioDetailPage({ params }: Props) {
         {/* Ending teasers */}
         {Array.isArray(scenario.endings) && scenario.endings.length > 0 && (
           <div className="hanji-card p-5 mb-8">
-            <h2 className="font-serif font-semibold text-text mb-3">가능한 결말 미리보기</h2>
+            <h2 className="font-serif font-semibold text-text mb-3">{t("endingPreview")}</h2>
             <div className="space-y-3">
               {scenario.endings.slice(0, 3).map((ending) => (
                 <div key={ending.id} className="flex items-center gap-3">
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-text">{ending.title?.ko}</p>
-                    <p className="text-xs text-text-caption">{ending.shortDescription?.ko}</p>
+                    <p className="text-sm font-medium text-text">{loc(ending.title)}</p>
+                    <p className="text-xs text-text-caption">{loc(ending.shortDescription)}</p>
                   </div>
                   <span className="text-xs text-text-caption whitespace-nowrap">
                     {ending.rarityPercentage?.toFixed(1)}%
@@ -178,7 +204,7 @@ export default async function ScenarioDetailPage({ params }: Props) {
               ))}
               {scenario.endings.length > 3 && (
                 <p className="text-xs text-text-caption italic">
-                  + {scenario.endings.length - 3}개의 결말이 더 있습니다...
+                  {t("moreEndings", { n: scenario.endings.length - 3 })}
                 </p>
               )}
             </div>
@@ -188,7 +214,7 @@ export default async function ScenarioDetailPage({ params }: Props) {
         {/* CTA */}
         <Link href={`/scenarios/${scenario.id}/play`}>
           <Button size="lg" fullWidth className="shadow-paper-md">
-            ▶ 이 시나리오 시작하기
+            {t("startScenario")}
           </Button>
         </Link>
       </div>
