@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "@/i18n/navigation"
+import { useRouter } from "@/i18n/navigation";
 import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { GameHeader } from "@/components/layout/game-header";
+import { useLife } from "@/lib/hooks/use-life";
+import { useScenario } from "@/lib/hooks/use-scenario";
 import { initStats } from "@/lib/utils";
 
 interface Props {
@@ -21,10 +23,20 @@ export default function FreeformPage({ params }: Props) {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<{ narrative: string; statChanges: Record<string, number> } | null>(null);
-  const stats = initStats(10);
+
+  const { life } = useLife(lifeId);
+  const { scenario } = useScenario(life?.scenarioId);
+
   const chapter = parseInt(n);
-  const age = 12 + chapter - 1;
-  const year = 1897 + chapter - 1;
+  const cradleStartAge = scenario?.cradleConfig?.cradleStartAge ?? 12;
+  const cradleEndAge = scenario?.cradleConfig?.cradleEndAge ?? 15;
+  const eraStartYear = scenario?.cradleConfig?.eraStartYear ?? null;
+  const t0Chapter = cradleEndAge - cradleStartAge + 1;
+
+  const age = cradleStartAge + chapter - 1;
+  const year = eraStartYear != null ? eraStartYear + chapter - 1 : null;
+  const stats = life?.stats ?? initStats(10);
+  const phase = chapter <= t0Chapter ? "cradle" : "main";
 
   async function handleSubmit() {
     if (!input.trim() || input.length < 10) return;
@@ -58,11 +70,11 @@ export default function FreeformPage({ params }: Props) {
       <GameHeader
         chapter={chapter}
         age={age}
-        year={year}
+        year={year ?? undefined}
         eventProgress={{ current: parseInt(eventNum), total: 6 }}
         stats={stats}
         backHref={`/play/${lifeId}/chapter/${n}/event/${eventNum}`}
-        phase={chapter < 7 ? "cradle" : "main"}
+        phase={phase}
       />
 
       <div className="flex-1 flex flex-col max-w-game mx-auto w-full px-screen-x py-6">

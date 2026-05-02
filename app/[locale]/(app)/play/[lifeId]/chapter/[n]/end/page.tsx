@@ -5,6 +5,7 @@ import { useRouter } from "@/i18n/navigation";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useLife } from "@/lib/hooks/use-life";
+import { useScenario } from "@/lib/hooks/use-scenario";
 import { initStats, checkStatDeath, applyStatChanges, getStatWarningLevel } from "@/lib/utils";
 import { getStatDeathNarrative, applyNaturalAgingStats, computeStatInteractions } from "@/lib/game/stats";
 import { STAT_LABELS } from "@/lib/types";
@@ -14,27 +15,29 @@ interface Props {
   params: { lifeId: string; n: string };
 }
 
-const CRADLE_START_AGE = 12;
-const CRADLE_START_YEAR = 1897;
-const T0_CHAPTER = 4;
-
 export default function ChapterEndPage({ params }: Props) {
   const router = useRouter();
   const { lifeId, n } = params;
   const chapter = parseInt(n);
-  const isT0Chapter = chapter === T0_CHAPTER;
 
   const { life } = useLife(lifeId);
+  const { scenario } = useScenario(life?.scenarioId);
+
+  const cradleStartAge = scenario?.cradleConfig?.cradleStartAge ?? 12;
+  const cradleEndAge = scenario?.cradleConfig?.cradleEndAge ?? 15;
+  const eraStartYear = scenario?.cradleConfig?.eraStartYear ?? null;
+  const t0Chapter = cradleEndAge - cradleStartAge + 1;
+
   const stats = life?.stats ?? initStats(10);
-  const age = CRADLE_START_AGE + chapter - 1;
-  const year = CRADLE_START_YEAR + chapter - 1;
+  const age = cradleStartAge + chapter - 1;
+  const year = eraStartYear != null ? eraStartYear + chapter - 1 : null;
+  const isT0Chapter = chapter === t0Chapter;
 
   const savedRef = useRef(false);
   const [interactions, setInteractions] = useState<{ label: string; isDanger: boolean }[]>([]);
   const [deathSaved, setDeathSaved] = useState(false);
   const [chapterLocations, setChapterLocations] = useState<{ nameKo: string; guideNote: string }[]>([]);
 
-  // 챕터 완료 마킹 + 노화 + 상호작용 + 즉사 처리
   useEffect(() => {
     if (!life || savedRef.current) return;
     savedRef.current = true;
@@ -50,10 +53,7 @@ export default function ChapterEndPage({ params }: Props) {
     }));
     setInteractions(activated);
 
-    const updates: Record<string, unknown> = {
-      addCompletedChapter: chapter,
-    };
-
+    const updates: Record<string, unknown> = { addCompletedChapter: chapter };
     if (Object.keys(aging).length > 0) updates.stats = agedStats;
     if (Object.keys(newQualities).length > 0) {
       updates.qualities = { ...(life.qualities ?? {}), ...newQualities };
@@ -72,7 +72,6 @@ export default function ChapterEndPage({ params }: Props) {
     }).catch(() => {});
   }, [life]); // eslint-disable-line
 
-  // 이 챕터(나이)에 해당하는 장소 로드
   useEffect(() => {
     if (!life?.scenarioId) return;
     fetch(`/api/scenarios/${life.scenarioId}/locations`)
@@ -93,7 +92,6 @@ export default function ChapterEndPage({ params }: Props) {
     );
   }
 
-  // 즉사 체크 (노화 적용 후)
   const aging = applyNaturalAgingStats(stats, age);
   const agedStats = Object.keys(aging).length > 0 ? applyStatChanges(stats, aging) : stats;
   const deadStat = checkStatDeath(agedStats);
@@ -119,12 +117,14 @@ export default function ChapterEndPage({ params }: Props) {
     }
   }
 
+  const ageYearLabel = year != null ? `${age}세 · ${year}년` : `${age}세`;
+
   return (
     <div className="min-h-dvh bg-bg flex flex-col">
       <div className="flex-1 flex flex-col max-w-game mx-auto w-full px-screen-x py-8">
 
         <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
-          <p className="era-label mb-1">{age}세 · {year}년</p>
+          <p className="era-label mb-1">{ageYearLabel}</p>
           <h1 className="font-serif text-2xl font-bold text-text">챕터 {chapter} 마무리</h1>
         </motion.div>
 
@@ -135,7 +135,7 @@ export default function ChapterEndPage({ params }: Props) {
         >
           <p className="text-xs text-text-caption mb-3 font-medium uppercase tracking-wider">이 해의 기록</p>
           <div className="space-y-2">
-            {getChapterSummary(chapter, age, year).map((line, i) => (
+            {getChapterSummary(chapter, age, year, isT0Chapter, scenario?.title?.ko).map((line, i) => (
               <p key={i} className="narrative-text text-sm leading-relaxed">{line}</p>
             ))}
           </div>
@@ -201,7 +201,7 @@ export default function ChapterEndPage({ params }: Props) {
             className="hanji-card p-4 mb-5 border border-accent-gold/30 bg-accent-gold/5"
           >
             <p className="text-sm text-text-muted leading-relaxed text-center font-serif italic">
-              "3년이 흘렀다. 이제 당신이 누구인지 알게 될 시간이 왔다."
+              "이제 당신이 누구인지 알게 될 시간이 왔다."
             </p>
           </motion.div>
         )}
@@ -215,8 +215,6 @@ export default function ChapterEndPage({ params }: Props) {
     </div>
   );
 }
-
-// ── 스탯 경고 그리드 ─────────────────────────────────────────────────────────
 
 function StatWarningGrid({ stats }: { stats: Stats }) {
   return (
@@ -254,7 +252,6 @@ function StatWarningGrid({ stats }: { stats: Stats }) {
                 style={{ width: `${pct}%` }}
               />
             </div>
-            {/* 경고 메시지 */}
             {warning !== "none" && (
               <p className={`text-xs mt-0.5 ${warning === "hard" ? "text-red-400" : "text-amber-400"}`}>
                 {warning === "hard"
@@ -272,8 +269,6 @@ function StatWarningGrid({ stats }: { stats: Stats }) {
     </div>
   );
 }
-
-// ── 즉사 화면 ────────────────────────────────────────────────────────────────
 
 function DeathScreen({
   stat, stats, age, lifeId, saved, onFinish,
@@ -297,26 +292,16 @@ function DeathScreen({
         transition={{ duration: 1.2 }}
         className="max-w-game w-full text-center"
       >
-        {/* 즉사 스탯 표시 */}
         <p className="text-xs text-text-caption mb-6 tracking-widest uppercase">
           {label.icon} {label.ko} — {val <= 0 ? "0" : "20"}
         </p>
-
-        {/* 즉사 내러티브 */}
         <div className="hanji-card p-6 mb-8 border-l-2 border-accent-maple">
-          <p className="font-serif text-lg text-text leading-relaxed mb-4">
-            {age}세.
-          </p>
-          <p className="narrative-text leading-relaxed text-text-muted">
-            {narrative}
-          </p>
+          <p className="font-serif text-lg text-text leading-relaxed mb-4">{age}세.</p>
+          <p className="narrative-text leading-relaxed text-text-muted">{narrative}</p>
         </div>
-
-        {/* 희귀 결말 안내 */}
         <p className="text-xs text-text-caption mb-8 opacity-60">
           이 결말은 전체 플레이어 중 극소수만 맞이합니다.
         </p>
-
         <Button size="lg" fullWidth onClick={onFinish}>
           인생 카드 받기 ▶
         </Button>
@@ -325,31 +310,27 @@ function DeathScreen({
   );
 }
 
-// ── 챕터 요약 ─────────────────────────────────────────────────────────────────
+function getChapterSummary(
+  chapter: number,
+  age: number,
+  year: number | null,
+  isT0: boolean,
+  scenarioTitle?: string
+): string[] {
+  const yearStr = year != null ? `${year}년` : "";
+  const ageYear = yearStr ? `${age}세, ${yearStr}.` : `${age}세.`;
 
-function getChapterSummary(chapter: number, age: number, year: number): string[] {
-  const summaries: Record<number, string[]> = {
-    1: [
-      `${age}세, 대한제국 원년 ${year}년.`,
-      "새 나라의 이름이 선포된 해였다. 당신은 그 변화의 한가운데서 처음으로 세상을 인식하기 시작했다.",
-    ],
-    2: [
-      `${age}세의 여름. 만민공동회의 외침이 종로를 울렸다.`,
-      "처음으로 나라에 대해 진지하게 생각하게 된 계절이었다.",
-    ],
-    3: [
-      `${age}세, ${year}년. 한성에 전차가 놓였다.`,
-      "빠르게 변하는 세상 속에서 당신은 자신이 어디로 가야 할지 생각했다.",
-    ],
-    4: [
+  if (isT0) {
+    return [
       `${age}세. 크레이들의 마지막 해.`,
-      "3년이 지났다. 당신은 이제 더 이상 어린아이가 아니다.",
-      "당신이 걸어온 길이, 이제 당신이 누구인지를 결정할 것이다.",
-    ],
-  };
+      "이제 당신이 걸어온 길이 당신이 누구인지를 결정할 것이다.",
+    ];
+  }
 
-  return summaries[chapter] ?? [
-    `${age}세, ${year}년.`,
-    "당신의 이야기가 계속되고 있다.",
+  return [
+    ageYear,
+    scenarioTitle
+      ? `${scenarioTitle}의 세계에서 당신의 이야기가 한 해 더 쌓였다.`
+      : "당신의 이야기가 계속되고 있다.",
   ];
 }
