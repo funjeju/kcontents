@@ -222,7 +222,7 @@ function StatWarningGrid({ stats }: { stats: Stats }) {
       {(Object.entries(stats) as [StatKey, number][]).map(([key, val]) => {
         const label = STAT_LABELS[key];
         const warning = getStatWarningLevel(val);
-        const pct = (val / 20) * 100;
+        const pct = (val / 50) * 100;
 
         return (
           <div key={key}>
@@ -255,10 +255,10 @@ function StatWarningGrid({ stats }: { stats: Stats }) {
             {warning !== "none" && (
               <p className={`text-xs mt-0.5 ${warning === "hard" ? "text-red-400" : "text-amber-400"}`}>
                 {warning === "hard"
-                  ? val >= 19
+                  ? val >= 47
                     ? "지나친 빛은 그림자를 만든다. 당신의 영혼이 한쪽으로 기울고 있다."
                     : "위태로운 경계에 서 있다."
-                  : val >= 16
+                  : val >= 40
                   ? "지나친 빛은 그림자를 만든다."
                   : "이 힘이 더 약해지면 위험하다."}
               </p>

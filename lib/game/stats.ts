@@ -48,25 +48,25 @@ export const STAT_INTERACTIONS: {
   isDanger: boolean;
 }[] = [
   {
-    condition: (s) => s.intellect >= 17 && s.creativity >= 17,
+    condition: (s) => s.intellect >= 42 && s.creativity >= 42,
     quality: "genius",
     labelKo: "천재",
     isDanger: false,
   },
   {
-    condition: (s) => s.morality >= 17 && s.sociability >= 17,
+    condition: (s) => s.morality >= 42 && s.sociability >= 42,
     quality: "community_leader",
     labelKo: "공동체 지도자",
     isDanger: false,
   },
   {
-    condition: (s) => s.morality >= 17 && s.sociability <= 5,
+    condition: (s) => s.morality >= 42 && s.sociability <= 12,
     quality: "isolated_righteous",
     labelKo: "고립된 의인",
     isDanger: true,
   },
   {
-    condition: (s) => s.physique >= 17 && s.morality <= 5,
+    condition: (s) => s.physique >= 42 && s.morality <= 12,
     quality: "rampage_risk",
     labelKo: "폭주 위험",
     isDanger: true,

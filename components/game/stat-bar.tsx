@@ -16,7 +16,7 @@ interface StatBarProps {
 export function StatBar({ statKey, value, delta, size = "md" }: StatBarProps) {
   const label = STAT_LABELS[statKey];
   const color = getStatColor(statKey);
-  const pct = (value / 20) * 100;
+  const pct = (value / 50) * 100;
 
   return (
     <div className={cn("flex items-center gap-3", size === "sm" ? "gap-2" : "gap-3")}>

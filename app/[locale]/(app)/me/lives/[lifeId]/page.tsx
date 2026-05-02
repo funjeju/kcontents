@@ -6,35 +6,32 @@ import { ChevronLeft, Star, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StatChip } from "@/components/game/stat-bar";
 import { useLife } from "@/lib/hooks/use-life";
-import { MR_SUNSHINE_SCENARIO } from "@/data/scenarios/mr-sunshine";
+import { useScenario } from "@/lib/hooks/use-scenario";
 
 interface Props {
   params: { lifeId: string };
 }
 
-const SCENARIOS: Record<string, typeof MR_SUNSHINE_SCENARIO> = {
-  mr_sunshine: MR_SUNSHINE_SCENARIO,
-};
-
-// Mr. Sunshine: 크레이들 12세(1897) → T-0 15세(1900) → 본편
-const CHAPTER_AGES = [12, 13, 14, 15, 16, 17, 18, 19];
-const CHAPTER_YEARS = [1897, 1898, 1899, 1900, 1901, 1902, 1903, 1904];
-
 export default function LifeReviewPage({ params }: Props) {
   const router = useRouter();
   const { lifeId } = params;
 
-  const { life, loading } = useLife(lifeId);
+  const { life, loading: lifeLoading } = useLife(lifeId);
+  const { scenario, loading: scenarioLoading } = useScenario(life?.scenarioId);
 
-  const scenario = life ? SCENARIOS[life.scenarioId] : null;
-  const castingRole = scenario?.castingRoles.find((r) => r.id === life?.castingRole);
-  const ending = scenario?.endings.find((e) => e.id === life?.endingId);
+  const loading = lifeLoading || (!!life && scenarioLoading);
+
+  const castingRole = scenario?.castingRoles?.find((r) => r.id === life?.castingRole);
+  const ending = scenario?.endings?.find((e) => e.id === life?.endingId);
 
   const characterName = life?.characterName ?? "—";
-  const roleName = castingRole?.name.ko ?? "—";
-  const endingTitle = ending?.title.ko ?? "—";
+  const roleName = castingRole?.name?.ko ?? "—";
+  const endingTitle = ending?.title?.ko ?? "—";
   const endingRarity = ending?.rarityPercentage ?? 0;
-  const scenarioTitle = scenario?.title.ko ?? "미스터 션샤인 정서";
+  const scenarioTitle = scenario?.title?.ko ?? "—";
+
+  const cradleStartAge = scenario?.cradleConfig?.cradleStartAge ?? 0;
+  const eraStartYear = scenario?.cradleConfig?.eraStartYear;
 
   const completedChapters = life?.completedChapters ?? [];
 
@@ -121,8 +118,8 @@ export default function LifeReviewPage({ params }: Props) {
                 <p className="text-xs text-text-caption uppercase tracking-wider mb-3">챕터 기록</p>
                 <div className="space-y-0">
                   {completedChapters.map((chNum, i) => {
-                    const age = CHAPTER_AGES[chNum - 1] ?? 9 + chNum - 1;
-                    const year = CHAPTER_YEARS[chNum - 1] ?? 1894 + chNum - 1;
+                    const age = cradleStartAge + chNum - 1;
+                    const year = eraStartYear != null ? eraStartYear + chNum - 1 : null;
                     const isLast = i === completedChapters.length - 1;
                     return (
                       <div key={chNum} className="flex gap-3">
@@ -131,7 +128,9 @@ export default function LifeReviewPage({ params }: Props) {
                           {!isLast && <div className="w-px flex-1 bg-text/10 my-1" />}
                         </div>
                         <div className="pb-4">
-                          <p className="text-xs text-text-caption">{age}세 · {year}년</p>
+                          <p className="text-xs text-text-caption">
+                            {age}세{year != null ? ` · ${year}년` : ""}
+                          </p>
                           <p className="text-sm text-text-muted mt-0.5">챕터 {chNum} 완료</p>
                         </div>
                       </div>

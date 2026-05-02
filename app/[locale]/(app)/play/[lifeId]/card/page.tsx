@@ -7,36 +7,45 @@ import { Download, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StatChip } from "@/components/game/stat-bar";
 import { useLife } from "@/lib/hooks/use-life";
-import { MR_SUNSHINE_SCENARIO } from "@/data/scenarios/mr-sunshine";
+import { useScenario } from "@/lib/hooks/use-scenario";
 
 interface Props {
   params: { lifeId: string };
 }
-
-const SCENARIOS: Record<string, typeof MR_SUNSHINE_SCENARIO> = {
-  mr_sunshine: MR_SUNSHINE_SCENARIO,
-};
 
 export default function CardPage({ params }: Props) {
   const router = useRouter();
   const { lifeId } = params;
   const [flipped, setFlipped] = useState(false);
 
-  const { life, loading } = useLife(lifeId);
+  const { life, loading: lifeLoading } = useLife(lifeId);
+  const { scenario, loading: scenarioLoading } = useScenario(life?.scenarioId);
 
-  const scenario = life ? SCENARIOS[life.scenarioId] : null;
-  const castingRole = scenario?.castingRoles.find((r) => r.id === life?.castingRole);
-  const ending = scenario?.endings.find((e) => e.id === life?.endingId);
+  const loading = lifeLoading || (!!life && scenarioLoading);
+
+  const castingRole = scenario?.castingRoles?.find((r) => r.id === life?.castingRole);
+  const ending = scenario?.endings?.find((e) => e.id === life?.endingId);
+
+  const cradleStartAge = scenario?.cradleConfig?.cradleStartAge ?? 0;
+  const eraStartYear = scenario?.cradleConfig?.eraStartYear;
+  const mainStoryEndAge = scenario?.mainStoryEndAge;
+  const yearRange =
+    eraStartYear != null && mainStoryEndAge != null
+      ? `${eraStartYear}–${eraStartYear + (mainStoryEndAge - cradleStartAge)}`
+      : null;
+
+  const prefix = (life?.scenarioId ?? "XXX").replace(/[^a-zA-Z]/g, "").slice(0, 3).toUpperCase();
+  const cardNumber = `${prefix}-${lifeId.slice(-4).toUpperCase()}`;
 
   const cardData = {
     characterName: life?.characterName ?? "—",
-    scenarioTitle: scenario?.title.ko ?? "미스터 션샤인 정서",
-    roleName: castingRole?.name.ko ?? "—",
-    endingTitle: ending?.title.ko ?? "—",
+    scenarioTitle: scenario?.title?.ko ?? "—",
+    roleName: castingRole?.name?.ko ?? "—",
+    endingTitle: ending?.title?.ko ?? "—",
     endingRarity: ending?.rarityPercentage ?? 0,
     stats: life?.stats ?? {},
-    cardNumber: `MRS-${lifeId.slice(-4).toUpperCase()}`,
-    year: "1894–1919",
+    cardNumber,
+    year: yearRange,
   };
 
   return (
@@ -93,7 +102,9 @@ export default function CardPage({ params }: Props) {
                   <p className="text-xs text-text-caption mb-1">{cardData.scenarioTitle}</p>
                   <h2 className="font-serif text-lg font-bold text-text">{cardData.characterName}</h2>
                   <p className="text-sm text-accent-maple">{cardData.roleName}</p>
-                  <p className="text-xs text-text-caption mt-2">{cardData.year}</p>
+                  {cardData.year && (
+                    <p className="text-xs text-text-caption mt-2">{cardData.year}</p>
+                  )}
                   <div className="mt-2 pt-2 border-t border-text/5">
                     <p className="text-xs text-text-caption font-mono">{cardData.cardNumber}</p>
                   </div>

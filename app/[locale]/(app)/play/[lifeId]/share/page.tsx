@@ -6,15 +6,11 @@ import { motion } from "framer-motion";
 import { Link2, MessageCircle, Twitter, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLife } from "@/lib/hooks/use-life";
-import { MR_SUNSHINE_SCENARIO } from "@/data/scenarios/mr-sunshine";
+import { useScenario } from "@/lib/hooks/use-scenario";
 
 interface Props {
   params: { lifeId: string };
 }
-
-const SCENARIOS: Record<string, typeof MR_SUNSHINE_SCENARIO> = {
-  mr_sunshine: MR_SUNSHINE_SCENARIO,
-};
 
 export default function SharePage({ params }: Props) {
   const router = useRouter();
@@ -22,16 +18,16 @@ export default function SharePage({ params }: Props) {
   const [copied, setCopied] = useState(false);
 
   const { life } = useLife(lifeId);
+  const { scenario } = useScenario(life?.scenarioId);
 
-  const scenario = life ? SCENARIOS[life.scenarioId] : null;
-  const castingRole = scenario?.castingRoles.find((r) => r.id === life?.castingRole);
-  const ending = scenario?.endings.find((e) => e.id === life?.endingId);
+  const castingRole = scenario?.castingRoles?.find((r) => r.id === life?.castingRole);
+  const ending = scenario?.endings?.find((e) => e.id === life?.endingId);
 
   const characterName = life?.characterName ?? "—";
-  const roleName = castingRole?.name.ko ?? "—";
-  const endingTitle = ending?.title.ko ?? "—";
+  const roleName = castingRole?.name?.ko ?? "—";
+  const endingTitle = ending?.title?.ko ?? "—";
   const endingRarity = ending?.rarityPercentage ?? 0;
-  const scenarioTitle = scenario?.title.ko ?? "미스터 션샤인 정서";
+  const scenarioTitle = scenario?.title?.ko ?? "—";
 
   const shareText = `나는 ${scenarioTitle}에서 '${roleName}'로 살았습니다.\n결말: ${endingTitle}${endingRarity > 0 ? ` (상위 ${endingRarity}%)` : ""}\n\nLiveMovie에서 당신의 인생을 살아보세요.`;
 

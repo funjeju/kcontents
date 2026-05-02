@@ -13,9 +13,9 @@ export function initStats(base = 10): Stats {
   };
 }
 
-// ADMIN.md: 시작 8~11 사이 무작위
+// ADMIN.md: 시작 20~25 사이 무작위 (스탯 최대 50 기준)
 export function initStatsRandom(): Stats {
-  const r = () => 8 + Math.floor(Math.random() * 4);
+  const r = () => 20 + Math.floor(Math.random() * 6);
   return {
     intellect: r(), creativity: r(), emotion: r(),
     physique: r(), sociability: r(), morality: r(),
@@ -23,13 +23,13 @@ export function initStatsRandom(): Stats {
 }
 
 export function getStatWarningLevel(val: number): "none" | "soft" | "hard" {
-  if (val >= 19 || val <= 1) return "hard";
-  if (val >= 16 || val <= 4) return "soft";
+  if (val >= 47 || val <= 3) return "hard";
+  if (val >= 40 || val <= 8) return "soft";
   return "none";
 }
 
 export function clampStat(value: number): number {
-  return Math.max(0, Math.min(20, value));
+  return Math.max(0, Math.min(50, value));
 }
 
 export function applyStatChanges(stats: Stats, changes: Partial<Stats>): Stats {
@@ -44,7 +44,7 @@ export function applyStatChanges(stats: Stats, changes: Partial<Stats>): Stats {
 
 export function checkStatDeath(stats: Stats): StatKey | null {
   for (const [key, val] of Object.entries(stats)) {
-    if (val <= 0 || val >= 20) return key as StatKey;
+    if (val <= 0 || val >= 50) return key as StatKey;
   }
   return null;
 }
