@@ -12,8 +12,11 @@ import Image from "next/image";
 import { GameHeader } from "@/components/layout/game-header";
 import { ChoiceButton } from "@/components/game/choice-button";
 import { CardTray } from "@/components/game/card-tray";
+import { KoreanLessonCard } from "@/components/game/korean-lesson-card";
+import { LanguageModeToggle } from "@/components/game/language-mode-toggle";
 import { Button } from "@/components/ui/button";
 import { initStats, applyStatChanges } from "@/lib/utils";
+import { useLanguageMode } from "@/lib/hooks/use-language-mode";
 import type { Stats } from "@/lib/types";
 
 interface Props {
@@ -47,6 +50,8 @@ export default function EventPage({ params }: Props) {
     scenario?.title?.ko,
     scenario?.era
   );
+
+  const { mode: langMode } = useLanguageMode();
 
   const [phase, setPhase] = useState<Phase>("choosing");
   const [selectedChoice, setSelectedChoice] = useState<string | null>(null);
@@ -190,7 +195,10 @@ export default function EventPage({ params }: Props) {
       />
 
       <div className="flex-1 flex flex-col max-w-game mx-auto w-full px-screen-x py-6 overflow-y-auto">
-        <p className="era-label mb-4">{ageYearLabel}</p>
+        <div className="flex items-center justify-between mb-4">
+          <p className="era-label">{ageYearLabel}</p>
+          {isEn && <LanguageModeToggle />}
+        </div>
 
         {/* 챕터 일러스트 */}
         <AnimatePresence>
@@ -215,16 +223,46 @@ export default function EventPage({ params }: Props) {
 
         <AnimatePresence mode="wait">
           <motion.div
-            key={`narrative-${eventNum}`}
+            key={`narrative-${eventNum}-${langMode}`}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            className="event-narrative mb-6"
+            className="event-narrative mb-2"
           >
-            {event.narrative.split("\n").map((line, i) => (
-              <p key={i} className={i > 0 ? "mt-3" : ""}>{line}</p>
-            ))}
+            {/* ko 모드: 한국어만 */}
+            {isEn && langMode === "ko" && event.narrativeKo ? (
+              event.narrativeKo.split("\n").map((line, i) => (
+                <p key={i} className={i > 0 ? "mt-3" : ""}>{line}</p>
+              ))
+            ) : isEn && langMode === "mixed" ? (
+              <>
+                {/* mixed: 한국어 메인 + 영어 서브타이틀 */}
+                {(event.narrativeKo ?? event.narrative).split("\n").map((line, i) => (
+                  <p key={i} className={i > 0 ? "mt-3" : ""}>{line}</p>
+                ))}
+                {event.narrativeKo && (
+                  <div className="mt-3 pt-3 border-t border-text/10">
+                    {event.narrative.split("\n").map((line, i) => (
+                      <p key={i} className={`text-sm text-text-caption leading-relaxed ${i > 0 ? "mt-2" : ""}`}>{line}</p>
+                    ))}
+                  </div>
+                )}
+              </>
+            ) : (
+              // en 모드 (기본) 또는 한국어 locale
+              event.narrative.split("\n").map((line, i) => (
+                <p key={i} className={i > 0 ? "mt-3" : ""}>{line}</p>
+              ))
+            )}
           </motion.div>
         </AnimatePresence>
+
+        {/* 영문 모드 — 한국어 학습 카드 */}
+        {isEn && event.koreanLessons && event.koreanLessons.length > 0 && (
+          <KoreanLessonCard
+            lessons={event.koreanLessons}
+            scenarioTitle={scenario?.title?.ko ?? ""}
+          />
+        )}
 
         <AnimatePresence>
           {phase === "result" && (
@@ -267,7 +305,7 @@ export default function EventPage({ params }: Props) {
             className="choices-container mt-6"
           >
             <p className="text-xs text-text-caption mb-3">{tg("yourChoice")}</p>
-            {event.choices.map((choice) => (
+            {(isEn && langMode === "ko" && event.choicesKo ? event.choicesKo : event.choices).map((choice) => (
               <ChoiceButton
                 key={choice.id}
                 choiceId={choice.id}

@@ -1,5 +1,5 @@
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
@@ -43,9 +43,23 @@ Generate exactly 1 event in this JSON format:
     "outcomes": {
       "A": { "statChanges": { "intellect": 0, "creativity": 0, "emotion": 0, "physique": 0, "sociability": 0, "morality": 0 }, "resultNarrative": "Result in 2-3 sentences, 60-100 chars" },
       "B": { "statChanges": { "intellect": 0, "creativity": 0, "emotion": 0, "physique": 0, "sociability": 0, "morality": 0 }, "resultNarrative": "Result in 2-3 sentences, 60-100 chars" }
-    }
+    },
+    "koreanLessons": [
+      {
+        "word": "Korean word or phrase (hangul)",
+        "romanization": "pronunciation in romanization",
+        "meaning": "concise English meaning",
+        "culturalNote": "2-3 sentences explaining the cultural significance, how it's used in Korean society, and why it's relevant to this scene. Make it genuinely insightful for someone learning about Korean culture."
+      }
+    ]
   }
 ]
+
+koreanLessons rules:
+- 2 items per event, directly tied to the scene's content, emotions, or setting
+- Choose words that reveal something genuine about Korean culture, not just vocabulary
+- Can include: everyday expressions, honorifics (존댓말), K-drama tropes, cultural customs, historical terms, or social norms
+- culturalNote must be substantive — explain WHY it matters in Korean society
 
 statChanges: each value -3 to +3 range. Total absolute sum 4-6. Output pure JSON array only.`;
     }
@@ -74,9 +88,24 @@ Generate exactly 6 events in this JSON format:
     "outcomes": {
       "A": { "statChanges": { "intellect": 0, "creativity": 0, "emotion": 0, "physique": 0, "sociability": 0, "morality": 0 }, "resultNarrative": "Result in 2-3 sentences, 60-100 chars" },
       "B": { "statChanges": { "intellect": 0, "creativity": 0, "emotion": 0, "physique": 0, "sociability": 0, "morality": 0 }, "resultNarrative": "Result in 2-3 sentences, 60-100 chars" }
-    }
+    },
+    "koreanLessons": [
+      {
+        "word": "Korean word or phrase (hangul)",
+        "romanization": "pronunciation in romanization",
+        "meaning": "concise English meaning",
+        "culturalNote": "2-3 sentences explaining the cultural significance, how it's used in Korean society, and why it's relevant to this scene. Make it genuinely insightful for someone learning about Korean culture."
+      }
+    ]
   }
 ]
+
+koreanLessons rules:
+- Exactly 2 items per event, each tied to something in that specific scene
+- Choose words that reveal something genuine about Korean culture — not just vocabulary definitions
+- Great topics: honorifics & hierarchy (존댓말/반말), unspoken social rules (눈치, 체면), relationship dynamics (오빠/언니/선배), cultural customs, food culture, K-drama emotional tropes, historical customs
+- culturalNote must be substantive — explain WHY this matters in Korean society, not just what it means
+- Vary topics across 6 events so players learn a wide range of cultural insights
 
 statChanges rules:
 - Each value -3 to +3. Total absolute sum per event: 4-6.
