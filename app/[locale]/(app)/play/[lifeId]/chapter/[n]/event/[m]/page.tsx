@@ -5,7 +5,9 @@ import { useRouter } from "@/i18n/navigation";
 import { useLife } from "@/lib/hooks/use-life";
 import { useScenario } from "@/lib/hooks/use-scenario";
 import { useChapterEvents } from "@/lib/hooks/use-chapter-events";
+import { useChapterImage } from "@/lib/hooks/use-chapter-image";
 import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
 import { GameHeader } from "@/components/layout/game-header";
 import { ChoiceButton } from "@/components/game/choice-button";
 import { CardTray } from "@/components/game/card-tray";
@@ -31,6 +33,15 @@ export default function EventPage({ params }: Props) {
   const { events: firestoreEvents, loading: eventsLoading, generating, error: eventsError, retry: retryEvents } = useChapterEvents(
     life?.scenarioId,
     chapterNum
+  );
+
+  const firstNarrative = firestoreEvents?.[0]?.narrative ?? null;
+  const { imageUrl: chapterImageUrl } = useChapterImage(
+    life?.scenarioId,
+    chapterNum,
+    firstNarrative,
+    scenario?.title?.ko,
+    scenario?.era
   );
 
   const [phase, setPhase] = useState<Phase>("choosing");
@@ -172,6 +183,27 @@ export default function EventPage({ params }: Props) {
 
       <div className="flex-1 flex flex-col max-w-game mx-auto w-full px-screen-x py-6 overflow-y-auto">
         <p className="era-label mb-4">{ageYearLabel}</p>
+
+        {/* 챕터 일러스트 */}
+        <AnimatePresence>
+          {chapterImageUrl ? (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="w-full rounded-xl overflow-hidden mb-5 aspect-video relative"
+            >
+              <Image
+                src={chapterImageUrl}
+                alt="chapter illustration"
+                fill
+                className="object-cover"
+                sizes="(max-width: 480px) 100vw, 480px"
+              />
+            </motion.div>
+          ) : (
+            <div className="w-full rounded-xl mb-5 aspect-video bg-text/5 animate-pulse" />
+          )}
+        </AnimatePresence>
 
         <AnimatePresence mode="wait">
           <motion.div

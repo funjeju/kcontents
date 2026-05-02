@@ -31,7 +31,7 @@ export async function POST(
   const era = String(data.era ?? "");
   const description = (data.description as { ko?: string })?.ko ?? "";
 
-  const imagePrompt = `Create a cinematic K-Drama scene poster for a story titled "${title}" set in ${era}. ${description ? `Theme: ${description}.` : ""} Painterly style, dramatic lighting, Korean aesthetic, no text, film poster composition.`;
+  const imagePrompt = `Korean webtoon manhwa illustration style poster for "${title}" set in ${era}. ${description ? description + "." : ""} Anime art style, vibrant saturated colors, expressive character design, soft cel-shading, detailed Korean traditional background, cinematic composition, no text, no watermark, no logo.`;
 
   try {
     const { generateScenarioImage } = await import("@/lib/gemini");
