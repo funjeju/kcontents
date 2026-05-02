@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { Star, Users, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -16,17 +15,17 @@ const GENRE_LABELS: Record<string, string> = {
   idol: "아이돌",
 };
 
-const HEAVINESS_LABELS = ["", "가벼움", "보통", "무거움", "강렬함", "최상위"];
-
 interface ScenarioCardProps {
   scenario: Scenario;
   featured?: boolean;
 }
 
 export function ScenarioCard({ scenario, featured }: ScenarioCardProps) {
-  const totalChapters =
-    (scenario.cradleConfig.cradleEndAge - scenario.cradleConfig.cradleStartAge) +
-    (scenario.mainStoryEndAge - scenario.cradleConfig.cradleEndAge);
+  const startAge = scenario.cradleConfig?.cradleStartAge ?? 0;
+  const endAge = scenario.cradleConfig?.cradleEndAge ?? 0;
+  const mainEndAge = scenario.mainStoryEndAge ?? endAge;
+  const totalChapters = (endAge - startAge) + (mainEndAge - endAge);
+  const heaviness = scenario.heaviness ?? 0;
 
   return (
     <Link
@@ -39,12 +38,11 @@ export function ScenarioCard({ scenario, featured }: ScenarioCardProps) {
       {/* Cover Image */}
       <div className="relative aspect-video bg-bg overflow-hidden">
         {scenario.coverImageUrl ? (
-          <Image
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
             src={scenario.coverImageUrl}
-            alt={scenario.title.ko}
-            fill
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
-            sizes="(max-width: 480px) 100vw, 480px"
+            alt={scenario.title?.ko ?? ""}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
@@ -60,7 +58,7 @@ export function ScenarioCard({ scenario, featured }: ScenarioCardProps) {
                 key={i}
                 className={cn(
                   "w-1.5 h-1.5 rounded-full",
-                  i < scenario.heaviness ? "bg-accent-maple" : "bg-white/30"
+                  i < heaviness ? "bg-accent-maple" : "bg-white/30"
                 )}
               />
             ))}
@@ -72,7 +70,7 @@ export function ScenarioCard({ scenario, featured }: ScenarioCardProps) {
       <div className="p-4">
         {/* Genre tags */}
         <div className="flex gap-1.5 flex-wrap mb-2">
-          {scenario.genre.slice(0, 2).map((g) => (
+          {Array.isArray(scenario.genre) && scenario.genre.slice(0, 2).map((g) => (
             <Badge key={g} variant="muted">
               {GENRE_LABELS[g] ?? g}
             </Badge>
@@ -81,23 +79,27 @@ export function ScenarioCard({ scenario, featured }: ScenarioCardProps) {
         </div>
 
         <h3 className="font-serif text-lg font-semibold text-text leading-tight mb-1">
-          {scenario.title.ko}
+          {scenario.title?.ko}
         </h3>
-        <p className="text-sm text-text-muted mb-3">{scenario.subtitle.ko}</p>
+        <p className="text-sm text-text-muted mb-3">{scenario.subtitle?.ko}</p>
         <p className="text-sm text-text-caption line-clamp-2 leading-relaxed mb-3">
-          {scenario.description.ko}
+          {scenario.description?.ko}
         </p>
 
         {/* Meta */}
         <div className="flex items-center gap-3 text-xs text-text-caption">
-          <div className="flex items-center gap-1">
-            <Star size={12} className="text-accent-gold fill-accent-gold" />
-            <span>{scenario.averageRating.toFixed(1)}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Users size={12} />
-            <span>{scenario.totalPlays.toLocaleString()}명 플레이</span>
-          </div>
+          {scenario.averageRating != null && (
+            <div className="flex items-center gap-1">
+              <Star size={12} className="text-accent-gold fill-accent-gold" />
+              <span>{scenario.averageRating.toFixed(1)}</span>
+            </div>
+          )}
+          {scenario.totalPlays != null && (
+            <div className="flex items-center gap-1">
+              <Users size={12} />
+              <span>{scenario.totalPlays.toLocaleString()}명 플레이</span>
+            </div>
+          )}
           <div className="flex items-center gap-1">
             <Clock size={12} />
             <span>{totalChapters}챕터</span>

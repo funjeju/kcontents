@@ -2,7 +2,6 @@ export const dynamic = "force-dynamic";
 
 import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
-import Image from "next/image";
 import { Star, Users, Clock, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -62,12 +61,11 @@ export default async function ScenarioDetailPage({ params }: Props) {
       {/* Cover */}
       <div className="aspect-video bg-bg-card relative overflow-hidden max-w-game mx-auto">
         {scenario.coverImageUrl ? (
-          <Image
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
             src={scenario.coverImageUrl}
             alt={scenario.title?.ko ?? ""}
-            fill
-            className="object-cover"
-            sizes="(max-width: 480px) 100vw, 480px"
+            className="w-full h-full object-cover"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
