@@ -38,12 +38,11 @@ export default async function ScenarioDetailPage({ params }: Props) {
   const scenario = await getScenario(params.id);
   if (!scenario) notFound();
 
-  const totalChapters =
-    (scenario.cradleConfig.cradleEndAge - scenario.cradleConfig.cradleStartAge) +
-    (scenario.mainStoryEndAge - scenario.cradleConfig.cradleEndAge);
-
-  const cradleYears =
-    scenario.cradleConfig.cradleEndAge - scenario.cradleConfig.cradleStartAge;
+  const startAge = scenario.cradleConfig?.cradleStartAge ?? 0;
+  const endAge = scenario.cradleConfig?.cradleEndAge ?? 0;
+  const mainEndAge = scenario.mainStoryEndAge ?? endAge;
+  const totalChapters = (endAge - startAge) + (mainEndAge - endAge);
+  const cradleYears = endAge - startAge;
 
   return (
     <div className="min-h-dvh bg-bg">
@@ -65,7 +64,7 @@ export default async function ScenarioDetailPage({ params }: Props) {
         {scenario.coverImageUrl ? (
           <Image
             src={scenario.coverImageUrl}
-            alt={scenario.title.ko}
+            alt={scenario.title?.ko ?? ""}
             fill
             className="object-cover"
             sizes="(max-width: 480px) 100vw, 480px"
@@ -82,14 +81,14 @@ export default async function ScenarioDetailPage({ params }: Props) {
         {/* Title */}
         <div className="mb-5 animate-slide-up">
           <div className="flex flex-wrap gap-1.5 mb-3">
-            {scenario.genre?.map((g) => (
+            {Array.isArray(scenario.genre) && scenario.genre.map((g) => (
               <Badge key={g} variant="muted">{GENRE_LABELS[g] ?? g}</Badge>
             ))}
             {scenario.heaviness != null && (
               <Badge variant="maple">무게 {"●".repeat(scenario.heaviness)}{"○".repeat(5 - scenario.heaviness)}</Badge>
             )}
           </div>
-          <h1 className="font-serif text-2xl font-bold text-text mb-1">{scenario.title.ko}</h1>
+          <h1 className="font-serif text-2xl font-bold text-text mb-1">{scenario.title?.ko}</h1>
           <p className="text-text-muted text-sm">{scenario.subtitle?.ko}</p>
 
           <div className="flex items-center gap-4 mt-3 text-sm text-text-caption">
@@ -121,34 +120,28 @@ export default async function ScenarioDetailPage({ params }: Props) {
         )}
 
         {/* Cradle info */}
-        <div className="hanji-card p-5 mb-5">
-          <h2 className="font-serif font-semibold text-text mb-3">Pre-Story Cradle</h2>
-          <div className="space-y-2 text-sm text-text-muted">
-            <div className="flex items-center gap-2">
-              <span className="text-accent-maple text-xs">●</span>
-              <span>
-                {scenario.cradleConfig.cradleStartAge}세부터 {scenario.cradleConfig.cradleEndAge}세까지{" "}
-                ({cradleYears}년) — 어린 시절을 살아갑니다
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-accent-jade text-xs">●</span>
-              <span>
-                {scenario.cradleConfig.cradleEndAge}세 T-0 모먼트 — 캐스팅이 결정됩니다
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-accent-gold text-xs">●</span>
-              <span>
-                Main Story — {scenario.cradleConfig.cradleEndAge}세부터{" "}
-                {scenario.mainStoryEndAge}세까지
-              </span>
+        {endAge > 0 && (
+          <div className="hanji-card p-5 mb-5">
+            <h2 className="font-serif font-semibold text-text mb-3">Pre-Story Cradle</h2>
+            <div className="space-y-2 text-sm text-text-muted">
+              <div className="flex items-center gap-2">
+                <span className="text-accent-maple text-xs">●</span>
+                <span>{startAge}세부터 {endAge}세까지 ({cradleYears}년) — 어린 시절을 살아갑니다</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-accent-jade text-xs">●</span>
+                <span>{endAge}세 T-0 모먼트 — 캐스팅이 결정됩니다</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-accent-gold text-xs">●</span>
+                <span>Main Story — {endAge}세부터 {mainEndAge}세까지</span>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Casting pool teaser */}
-        {scenario.castingRoles?.length > 0 && (
+        {Array.isArray(scenario.castingRoles) && scenario.castingRoles.length > 0 && (
           <div className="hanji-card p-5 mb-5">
             <h2 className="font-serif font-semibold text-text mb-3">
               당신은 어떤 사람이 될 수 있을까요?
@@ -160,7 +153,7 @@ export default async function ScenarioDetailPage({ params }: Props) {
                     ?
                   </div>
                   <div>
-                    <p className="font-medium text-sm text-text">{role.name.ko}</p>
+                    <p className="font-medium text-sm text-text">{role.name?.ko}</p>
                     <p className="text-xs text-text-caption">조건 미공개</p>
                   </div>
                 </div>
@@ -170,14 +163,14 @@ export default async function ScenarioDetailPage({ params }: Props) {
         )}
 
         {/* Ending teasers */}
-        {scenario.endings?.length > 0 && (
+        {Array.isArray(scenario.endings) && scenario.endings.length > 0 && (
           <div className="hanji-card p-5 mb-8">
             <h2 className="font-serif font-semibold text-text mb-3">가능한 결말 미리보기</h2>
             <div className="space-y-3">
               {scenario.endings.slice(0, 3).map((ending) => (
                 <div key={ending.id} className="flex items-center gap-3">
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-text">{ending.title.ko}</p>
+                    <p className="text-sm font-medium text-text">{ending.title?.ko}</p>
                     <p className="text-xs text-text-caption">{ending.shortDescription?.ko}</p>
                   </div>
                   <span className="text-xs text-text-caption whitespace-nowrap">

@@ -20,6 +20,7 @@ export function PlayClient({ scenario }: { scenario: Scenario }) {
     ...SUGGESTED_NAMES[0],
     ...SUGGESTED_NAMES[1],
   ]);
+  const startAge = scenario.cradleConfig?.cradleStartAge ?? 0;
   const [loading, setLoading] = useState(false);
 
   async function handleStart() {
@@ -49,7 +50,7 @@ export function PlayClient({ scenario }: { scenario: Scenario }) {
       <div className="mb-6">
         <p className="era-label">{scenario.subtitle?.ko}</p>
         <h1 className="font-serif text-2xl font-bold text-text mt-1">
-          {scenario.cradleConfig.cradleStartAge}세. 당신의 이름은?
+          {startAge}세. 당신의 이름은?
         </h1>
       </div>
 
@@ -111,7 +112,7 @@ export function PlayClient({ scenario }: { scenario: Scenario }) {
         >
           <p className="font-serif text-text text-sm leading-relaxed">
             <span className="text-accent-maple font-medium">{characterName}</span>은(는){" "}
-            {scenario.cradleConfig.cradleStartAge}세입니다.{" "}
+            {startAge}세입니다.{" "}
             {scenario.familyBackgrounds?.find((b) => b.id === selectedBg)?.descriptionKo}
           </p>
         </motion.div>
