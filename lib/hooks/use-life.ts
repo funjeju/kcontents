@@ -39,6 +39,15 @@ export function useLife(lifeId: string): UseLifeResult {
   useEffect(() => {
     if (!lifeId) return;
 
+    if (lifeId.startsWith("guest_")) {
+      try {
+        const raw = sessionStorage.getItem("guestLife");
+        if (raw) setLife(JSON.parse(raw) as LifeData);
+      } catch {}
+      setLoading(false);
+      return;
+    }
+
     fetch(`/api/lives/${lifeId}`)
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch life");
@@ -56,7 +65,14 @@ export function useLife(lifeId: string): UseLifeResult {
   }, [lifeId]);
 
   function mutate(updates: Partial<LifeData>) {
-    setLife((prev) => (prev ? { ...prev, ...updates } : prev));
+    setLife((prev) => {
+      if (!prev) return prev;
+      const next = { ...prev, ...updates };
+      if (prev.id.startsWith("guest_")) {
+        try { sessionStorage.setItem("guestLife", JSON.stringify(next)); } catch {}
+      }
+      return next;
+    });
   }
 
   return { life, loading, error, mutate };

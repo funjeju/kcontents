@@ -4,7 +4,7 @@ import { routing } from "./i18n/routing";
 
 const intlMiddleware = createMiddleware(routing);
 
-const PROTECTED_PATHS = ["/scenarios", "/play", "/me", "/billing", "/settings"];
+const PROTECTED_PATHS = ["/me", "/billing", "/settings"];
 const AUTH_PATHS = ["/login", "/signup", "/onboarding"];
 
 export default function middleware(req: NextRequest) {

@@ -71,7 +71,7 @@ function GuestWall() {
     if (loggedIn === false && pathname.includes("/play/")) {
       const count = parseInt(sessionStorage.getItem("guestEventCount") ?? "0") + 1;
       sessionStorage.setItem("guestEventCount", String(count));
-      if (count >= 5) setShow(true);
+      if (count >= 4) setShow(true);
     }
   }, [pathname, loggedIn]);
 

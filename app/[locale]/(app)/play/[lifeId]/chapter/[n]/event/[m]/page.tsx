@@ -82,17 +82,19 @@ export default function EventPage({ params }: Props) {
     setStatDeltas(outcome.statChanges);
 
     mutate({ stats: applyStatChanges(stats, outcome.statChanges) });
-    setSaving(true);
-    try {
-      await fetch(`/api/lives/${lifeId}/events/${chapterNum}-${eventNum}/respond`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ statChanges: outcome.statChanges }),
-      });
-    } catch {
-      // UI already updated
-    } finally {
-      setSaving(false);
+    if (!lifeId.startsWith("guest_")) {
+      setSaving(true);
+      try {
+        await fetch(`/api/lives/${lifeId}/events/${chapterNum}-${eventNum}/respond`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ statChanges: outcome.statChanges }),
+        });
+      } catch {
+        // UI already updated
+      } finally {
+        setSaving(false);
+      }
     }
   }
 

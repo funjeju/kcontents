@@ -36,6 +36,41 @@ export function PlayClient({ scenario }: { scenario: Scenario }) {
           familyBackground: selectedBg,
         }),
       });
+
+      if (res.status === 401) {
+        // 비로그인 — sessionStorage에 guest life 저장 후 진행
+        const bg = scenario.familyBackgrounds?.find((b) => b.id === selectedBg);
+        const baseStats = { intellect: 22, creativity: 22, emotion: 22, physique: 22, sociability: 22, morality: 22 };
+        const stats = bg?.initialStats
+          ? Object.fromEntries(
+              Object.entries(baseStats).map(([k, v]) => [k, v + (bg.initialStats[k as keyof typeof bg.initialStats] ?? 0)])
+            )
+          : baseStats;
+        const guestLife = {
+          id: `guest_${Date.now()}`,
+          characterName,
+          scenarioId: scenario.id,
+          scenarioTitle: scenario.title?.ko ?? null,
+          familyBackground: selectedBg,
+          stats,
+          qualities: {},
+          castingRole: null,
+          age: startAge,
+          isFinished: false,
+          endingId: null,
+          endingNarrative: null,
+          completedChapters: [],
+          selectedHeroCardSlots: [],
+          usedHeroCards: [],
+          lastPlayedAt: null,
+          currentChapterId: null,
+          currentEventIndex: null,
+        };
+        sessionStorage.setItem("guestLife", JSON.stringify(guestLife));
+        router.push(`/play/${guestLife.id}/intro`);
+        return;
+      }
+
       const data = await res.json();
       if (data.lifeId) {
         router.push(`/play/${data.lifeId}/intro`);
