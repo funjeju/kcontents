@@ -33,7 +33,7 @@ export function ChoiceButton({
           ? "bg-accent-maple/5 border-accent-maple shadow-paper-md"
           : "bg-bg-card border-transparent hover:border-text/15 hover:bg-bg shadow-paper",
         disabled && "opacity-50 cursor-not-allowed",
-        isFreeform && "border-dashed border-text/20 text-text-muted italic"
+        isFreeform && "border-dashed border-text/20"
       )}
     >
       <div className="flex items-start gap-3">
@@ -49,7 +49,7 @@ export function ChoiceButton({
             {choiceId}
           </span>
         )}
-        <span>{text}</span>
+        <span className={isFreeform ? "text-text-caption italic" : ""}>{text}</span>
       </div>
     </motion.button>
   );

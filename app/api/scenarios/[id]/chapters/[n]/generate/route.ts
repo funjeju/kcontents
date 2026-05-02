@@ -10,10 +10,14 @@ function buildPrompt(scenario: Scenario, chapterNum: number, age: number, isT0: 
   const title = isEn
     ? (scenario.title?.en ?? scenario.title?.ko ?? "Scenario")
     : (scenario.title?.ko ?? "시나리오");
+  const sourceTitle = scenario.title?.ko ?? "";
   const description = isEn
     ? (scenario.description?.en ?? scenario.description?.ko ?? "")
     : (scenario.description?.ko ?? "");
   const era = scenario.era ?? "";
+  const sourceLine = isEn
+    ? `This scenario is based on the Korean drama "${sourceTitle}". If you know this drama, reflect its actual story arc, key events, and emotional turning points faithfully in the events — do not make up a different story.`
+    : `이 시나리오는 "${sourceTitle}"을(를) 원작으로 합니다. 이 드라마를 알고 있다면, 실제 원작의 이야기 흐름·핵심 사건·감정적 전환점을 충실히 반영하세요. 임의로 다른 스토리를 만들지 마세요.`;
 
   if (isEn) {
     if (isT0) {
@@ -21,6 +25,7 @@ function buildPrompt(scenario: Scenario, chapterNum: number, age: number, isT0: 
 
 Scenario: "${title}" (${era})
 Description: ${description}
+${sourceLine}
 
 Chapter ${chapterNum} is the T-0 moment — the fateful decision the protagonist faces at age ${age}.
 Only 1 event is needed for this chapter.
@@ -48,6 +53,7 @@ statChanges: each value -3 to +3 range. Total absolute sum 4-6. Output pure JSON
 
 Scenario: "${title}" (${era})
 Description: ${description}
+${sourceLine}
 
 Chapter ${chapterNum}: the protagonist lives through age ${age}.
 Generate 6 events that fully match this scenario's world and atmosphere.
@@ -82,12 +88,13 @@ statChanges rules:
 Output pure JSON array only. No code blocks.`;
   }
 
-  // Korean prompts (unchanged)
+  // Korean prompts
   if (isT0) {
     return `당신은 K-Drama Life 게임의 이벤트 설계자입니다.
 
 시나리오: "${title}" (${era})
 설명: ${description}
+${sourceLine}
 
 챕터 ${chapterNum}은 T-0 순간입니다 — 주인공이 ${age}세에 맞이하는 운명의 결정 순간입니다.
 이 챕터에는 단 1개의 이벤트만 필요합니다.
@@ -115,6 +122,7 @@ statChanges: 각 값은 -3 ~ +3 범위. 합산 절댓값이 4~6. 순수 JSON 배
 
 시나리오: "${title}" (${era})
 설명: ${description}
+${sourceLine}
 
 챕터 ${chapterNum}: 주인공이 ${age}세를 살아가는 시기.
 이 시나리오의 세계관과 분위기에 완전히 맞는 이벤트 6개를 생성하세요.

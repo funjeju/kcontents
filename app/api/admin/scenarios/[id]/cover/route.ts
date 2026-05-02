@@ -31,22 +31,35 @@ export async function POST(
   const era = String(data.era ?? "");
   const description = (data.description as { ko?: string })?.ko ?? "";
 
-  const imagePrompt = `Create a dramatic anime illustration poster for the following story. Choose the single most fitting visual style from the options below based on the story's mood, era, and genre — then apply it consistently throughout the image.
+  const imagePrompt = `Create a dramatic anime-style poster illustration.
 
-Story: "${title}" — ${era}
-${description ? `Context: ${description}` : ""}
+SETTING: ${era}
+${description ? `Story: ${description}` : ""}
 
-Visual style options (pick one that best fits):
-• Style A — Makoto Shinkai (Your Name / Weathering With You): photorealistic backgrounds, hyper-detailed skies, emotional lighting, modern or semi-modern setting, bittersweet mood
-• Style B — Demon Slayer (Kimetsu no Yaiba): high-contrast dramatic lighting, bold color gradients, intense action energy, historical setting, cinematic flair
-• Style C — Violet Evergarden: soft pastel palette, warm golden light, period drama atmosphere, delicate character expressions, European or formal historical setting
-• Style D — Vinland Saga / Kingdom: gritty realism, muted earthy tones, detailed historical accuracy, serious dramatic weight
-• Style E — Wolf Children / Summer Wars (Mamoru Hosoda): warm family-drama feel, naturalistic light, everyday life elevated to beauty, emotional warmth
+VISUAL REQUIREMENTS — follow exactly based on the setting "${era}":
 
-Rules:
-- Costumes, architecture, and environment must match the actual historical period and geographic setting of the story — never substitute a different culture's aesthetics
-- No text, no watermark, no logo
-- Cinematic portrait/poster composition`;
+If the setting is modern (contains years like 2000s / 2010s / 2020s / 현대 / 당대 / contemporary):
+  → Characters must wear modern everyday clothes: jeans, coats, suits, street fashion
+  → Environment must show modern cityscape: glass towers, apartments, neon signs, subway, cafes, offices
+  → Zero historical elements
+
+If the setting is pre-20th century historical:
+  → Period-accurate clothing and architecture for that exact culture and era
+
+ABSOLUTELY DO NOT DRAW (unless the era explicitly demands it):
+✗ Hanbok, jeogori, chima, gat, or any traditional Korean costume
+✗ Hanok, tiled rooftops, wooden palace gates, traditional Korean architecture
+✗ Any element that visually contradicts the era "${era}"
+
+Choose ONE visual style that best fits this era and mood:
+• Style A — Makoto Shinkai: detailed urban/natural environments, luminous skies, modern emotional drama
+• Style B — Demon Slayer: bold contrast, dramatic lighting, intense cinematic atmosphere
+• Style C — Violet Evergarden: soft pastel palette, delicate light, emotional character focus
+• Style D — Vinland Saga / Kingdom: gritty realism, heavy atmosphere, serious dramatic weight
+• Style E — Mamoru Hosoda: warm naturalistic tones, everyday beauty, emotional warmth
+
+Composition: cinematic poster layout, no text, no watermark, no logo`;
+
 
 
   try {

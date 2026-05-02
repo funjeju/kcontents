@@ -40,22 +40,34 @@ export async function POST(req: NextRequest, { params }: Params) {
     }
 
     const excerpt = narrative.slice(0, 120).replace(/\n/g, " ");
-    const prompt = `Create an anime scene illustration. Choose the single most fitting visual style from the options below based on the story's mood and setting — then apply it consistently.
+    const prompt = `Create an anime-style scene illustration.
 
-Story: "${scenarioTitle}" set in ${era}
+SETTING: ${era}
 Scene: ${excerpt}
 
-Visual style options (pick one):
-• Style A — Makoto Shinkai: photorealistic backgrounds, hyper-detailed skies, emotional lighting, bittersweet mood
-• Style B — Demon Slayer: high-contrast dramatic lighting, bold color gradients, intense historical energy
-• Style C — Violet Evergarden: soft pastel palette, warm golden light, period drama, delicate expressions
-• Style D — Vinland Saga / Kingdom: gritty realism, muted earthy tones, historical accuracy, dramatic weight
-• Style E — Mamoru Hosoda: warm everyday naturalism, emotional storytelling, life elevated to beauty
+VISUAL REQUIREMENTS — follow exactly based on the setting "${era}":
 
-Rules:
-- Costumes and environment must match the actual setting of the story
-- Widescreen cinematic composition
-- No text, no watermark`;
+If the setting is modern (contains years like 2000s / 2010s / 2020s / 현대 / 당대 / contemporary):
+  → Characters must wear modern everyday clothes: jeans, coats, suits, street fashion
+  → Environment must show modern cityscape: glass towers, apartments, neon signs, subway, cafes, offices
+  → Zero historical elements
+
+If the setting is pre-20th century historical:
+  → Period-accurate clothing and architecture for that exact culture and era
+
+ABSOLUTELY DO NOT DRAW (unless the era explicitly demands it):
+✗ Hanbok, jeogori, chima, gat, or any traditional Korean costume
+✗ Hanok, tiled rooftops, wooden palace gates, traditional Korean architecture
+✗ Any element that visually contradicts the era "${era}"
+
+Choose ONE visual style that best fits this era and scene mood:
+• Style A — Makoto Shinkai: detailed urban/natural environments, luminous skies, modern emotional drama
+• Style B — Demon Slayer: bold contrast, dramatic lighting, intense cinematic atmosphere
+• Style C — Violet Evergarden: soft pastel palette, delicate light, emotional character focus
+• Style D — Vinland Saga / Kingdom: gritty realism, heavy atmosphere, serious dramatic weight
+• Style E — Mamoru Hosoda: warm naturalistic tones, everyday beauty, emotional warmth
+
+Composition: widescreen cinematic, no text, no watermark`;
 
 
     const image = await generateScenarioImage(prompt);
