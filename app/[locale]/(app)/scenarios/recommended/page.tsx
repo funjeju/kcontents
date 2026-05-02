@@ -31,7 +31,7 @@ export default async function RecommendedPage() {
       </div>
 
       {/* Scenarios */}
-      <div className="space-y-card-gap animate-fade-in">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 animate-fade-in">
         {scenarios.length > 0 ? (
           scenarios.map((scenario, i) => (
             <ScenarioCard key={scenario.id} scenario={scenario} featured={i === 0} />

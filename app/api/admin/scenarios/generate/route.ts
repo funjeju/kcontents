@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { adminAuth, adminDb } from "@/lib/firebase-admin";
+import { adminAuth, adminDb, adminStorage } from "@/lib/firebase-admin";
 
 async function verifyAdmin(): Promise<string | null> {
   const session = cookies().get("session")?.value;
@@ -24,7 +24,7 @@ const JSON_SCHEMA = `{
   "genre": ["historical", "romance", "action", ...],
   "heaviness": 감정무게 1~5,
   "recommendedAgeMin": 12~18,
-  "coverImageUrl": "/images/scenarios/[id]-cover.jpg",
+  "coverImageUrl": "",
   "cradleConfig": {
     "type": "self_youth 또는 parent_raising",
     "cradleStartAge": T0나이-3,
@@ -234,18 +234,48 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "대본이 필요합니다" }, { status: 400 });
   }
 
-  const prompt = buildPrompt({ source, title, hint, script });
+  const textPrompt = buildPrompt({ source, title, hint, script });
+
+  // 이미지 프롬프트는 입력값으로 바로 생성 (텍스트 결과 불필요)
+  const inputLabel = source === "script" ? "K-Drama" : (title ?? "K-Drama");
+  const imagePrompt = `Create a cinematic K-Drama scene poster for "${inputLabel}". ${hint ?? ""} Painterly style, dramatic lighting, Korean aesthetic, no text, film poster composition.`;
 
   try {
-    const { generateText } = await import("@/lib/gemini");
-    const text = await generateText(prompt);
-    const scenario = parseJson(text);
+    const { generateText, generateScenarioImage } = await import("@/lib/gemini");
 
+    // 텍스트 생성과 이미지 생성 병렬 실행
+    const [textResult, imageResult] = await Promise.allSettled([
+      generateText(textPrompt),
+      generateScenarioImage(imagePrompt),
+    ]);
+
+    if (textResult.status === "rejected") {
+      return NextResponse.json({ error: "AI 호출 실패" }, { status: 500 });
+    }
+
+    const scenario = parseJson(textResult.value);
     if (!scenario || !scenario.id || !scenario.castingRoles) {
       return NextResponse.json(
-        { error: "시나리오 구조 생성 실패. 다시 시도해 주세요.", raw: text.slice(0, 500) },
+        { error: "시나리오 구조 생성 실패. 다시 시도해 주세요.", raw: textResult.value.slice(0, 500) },
         { status: 500 }
       );
+    }
+
+    // 이미지 생성 성공 시 Storage에 업로드
+    if (imageResult.status === "fulfilled" && imageResult.value) {
+      try {
+        const image = imageResult.value;
+        const scenarioId = scenario.id as string;
+        const bucket = adminStorage.bucket(process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET);
+        const filePath = `scenarios/${scenarioId}/cover.jpg`;
+        const file = bucket.file(filePath);
+        await file.save(image.data, { metadata: { contentType: image.mimeType }, public: true });
+        scenario.coverImageUrl = `https://storage.googleapis.com/${bucket.name}/${filePath}`;
+      } catch {
+        scenario.coverImageUrl = "";
+      }
+    } else {
+      scenario.coverImageUrl = "";
     }
 
     return NextResponse.json({ scenario });

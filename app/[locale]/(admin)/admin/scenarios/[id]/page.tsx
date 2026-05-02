@@ -743,6 +743,7 @@ export default function AdminScenarioDetailPage() {
         <OverviewTab
           s={s}
           status={status}
+          scenarioId={scenarioId}
           onStatusChange={handleStatusChange}
           onDelete={handleDelete}
         />
@@ -896,11 +897,87 @@ export default function AdminScenarioDetailPage() {
 
 // ── Overview Tab ──────────────────────────────────────────────────────────────
 
+function CoverImageSection({ scenarioId, initialUrl }: { scenarioId: string; initialUrl?: string }) {
+  const [url, setUrl] = useState(initialUrl ?? "");
+  const [generating, setGenerating] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleAiGenerate() {
+    setGenerating(true);
+    setError("");
+    try {
+      const res = await fetch(`/api/admin/scenarios/${scenarioId}/cover`, { method: "POST" });
+      const data = await res.json();
+      if (data.coverImageUrl) setUrl(data.coverImageUrl);
+      else setError(data.error ?? "생성 실패");
+    } catch {
+      setError("네트워크 오류");
+    } finally {
+      setGenerating(false);
+    }
+  }
+
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    setError("");
+    try {
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const base64 = (reader.result as string).split(",")[1];
+        const res = await fetch(`/api/admin/scenarios/${scenarioId}/cover`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ base64, mimeType: file.type }),
+        });
+        const data = await res.json();
+        if (data.coverImageUrl) setUrl(data.coverImageUrl);
+        else setError(data.error ?? "업로드 실패");
+        setUploading(false);
+      };
+      reader.readAsDataURL(file);
+    } catch {
+      setError("업로드 오류");
+      setUploading(false);
+    }
+  }
+
+  return (
+    <div className="border border-white/10 rounded-xl p-5">
+      <p className="text-xs text-white/40 uppercase tracking-wider mb-3">커버 이미지</p>
+      <div className="aspect-video bg-white/5 rounded-lg overflow-hidden mb-3 flex items-center justify-center">
+        {url ? (
+          <img src={url} alt="cover" className="w-full h-full object-cover" />
+        ) : (
+          <p className="text-white/20 text-sm">이미지 없음</p>
+        )}
+      </div>
+      {error && <p className="text-red-400 text-xs mb-2">{error}</p>}
+      <div className="flex gap-2">
+        <button
+          onClick={handleAiGenerate}
+          disabled={generating || uploading}
+          className="flex-1 py-2 text-xs bg-purple-500/20 text-purple-300 border border-purple-500/30 rounded-lg hover:bg-purple-500/30 transition-colors disabled:opacity-50"
+        >
+          {generating ? "AI 생성 중..." : "✦ AI로 생성"}
+        </button>
+        <label className={`flex-1 py-2 text-xs bg-white/5 text-white/50 border border-white/10 rounded-lg hover:bg-white/10 transition-colors cursor-pointer text-center ${uploading ? "opacity-50 pointer-events-none" : ""}`}>
+          {uploading ? "업로드 중..." : "↑ 직접 업로드"}
+          <input type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+        </label>
+      </div>
+    </div>
+  );
+}
+
 function OverviewTab({
-  s, status, onStatusChange, onDelete,
+  s, status, scenarioId, onStatusChange, onDelete,
 }: {
   s: ScenarioShape;
   status: Status;
+  scenarioId: string;
   onStatusChange: (s: Status) => void;
   onDelete: () => void;
 }) {
@@ -915,6 +992,9 @@ function OverviewTab({
 
   return (
     <div className="space-y-4">
+      {/* 커버 이미지 */}
+      <CoverImageSection scenarioId={scenarioId} initialUrl={s.coverImageUrl} />
+
       {/* 발행 워크플로우 */}
       <div className={`border rounded-xl p-5 ${
         status === "published"
@@ -2159,4 +2239,5 @@ interface ScenarioShape {
   iconicMoments?: unknown[];
   genre?: string[];
   isPremium?: boolean;
+  coverImageUrl?: string;
 }

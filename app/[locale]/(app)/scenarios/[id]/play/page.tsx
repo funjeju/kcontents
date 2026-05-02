@@ -13,7 +13,8 @@ async function getScenario(id: string): Promise<Scenario | null> {
   try {
     const doc = await adminDb.collection("scenarios").doc(id).get();
     if (!doc.exists) return null;
-    return { id: doc.id, ...doc.data() } as Scenario;
+    // Firestore Timestamp 등 non-serializable 객체를 제거하고 클라이언트로 전달
+    return JSON.parse(JSON.stringify({ id: doc.id, ...doc.data() })) as Scenario;
   } catch {
     return null;
   }
