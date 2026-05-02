@@ -9,7 +9,7 @@ async function getPublishedScenarios(): Promise<Scenario[]> {
     const snap = await adminDb.collection("scenarios").get();
     const scenarios = snap.docs.map((d) => ({ id: d.id, ...d.data() })) as Scenario[];
     // status가 "draft"인 것만 제외, 나머지는 모두 표시
-    const visible = scenarios.filter((s) => (s as Record<string, unknown>)["status"] !== "draft");
+    const visible = scenarios.filter((s) => (s as unknown as Record<string, unknown>)["status"] !== "draft");
     return visible.sort((a, b) => {
       const aDate = a.publishedAt ?? a.updatedAt ?? "";
       const bDate = b.publishedAt ?? b.updatedAt ?? "";
