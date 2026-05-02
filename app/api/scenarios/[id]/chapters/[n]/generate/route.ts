@@ -65,8 +65,14 @@ statChanges: 각 값은 -3 ~ +3 범위. 합산 절댓값이 4~6. 순수 JSON 배
   }
 ]
 
-statChanges: 각 값은 -3 ~ +3 범위. 합산 절댓값이 4~6.
-6개 이벤트 전체에서 다양한 stat이 고루 변화해야 함.
+statChanges 규칙:
+- 각 값은 -3 ~ +3 범위. 이벤트 하나당 합산 절댓값 4~6.
+- 이벤트마다 주로 변화하는 스탯을 다르게 배분하라:
+  이벤트1: intellect/creativity 위주 | 이벤트2: sociability/emotion 위주
+  이벤트3: physique/morality 위주 | 이벤트4: creativity/morality 위주
+  이벤트5: emotion/intellect 위주 | 이벤트6: physique/sociability 위주
+- 같은 스탯이 6개 이벤트 모두에서 오르는 일은 절대 없어야 한다.
+- 선택지 A와 B는 서로 다른 스탯에 영향을 줘야 한다.
 순수 JSON 배열만 출력. 코드블록 없이.`;
 }
 

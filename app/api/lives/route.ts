@@ -1,16 +1,11 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
-import { adminAuth, adminDb, getSessionUid } from "@/lib/firebase-admin";
+import { adminDb, getSessionUid } from "@/lib/firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
 import { cookies } from "next/headers";
 import { generateId, initStatsRandom, applyStatChanges } from "@/lib/utils";
-import { MR_SUNSHINE_SCENARIO } from "@/data/scenarios/mr-sunshine";
-import type { Life, PathVariables, Scenario } from "@/lib/types";
-
-const SCENARIOS: Record<string, Scenario> = {
-  mr_sunshine: MR_SUNSHINE_SCENARIO,
-};
+import type { FamilyBackground, PathVariables, Scenario } from "@/lib/types";
 
 export async function POST(req: NextRequest) {
   try {
@@ -26,6 +21,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
+    // Firestore에서 시나리오 조회 (하드코딩 제거)
+    const scenarioDoc = await adminDb.collection("scenarios").doc(scenarioId).get();
+    const scenario = scenarioDoc.exists ? (scenarioDoc.data() as Scenario) : null;
+
     const lifeId = generateId();
     const now = FieldValue.serverTimestamp();
 
@@ -36,18 +35,19 @@ export async function POST(req: NextRequest) {
       iconicMomentsSeen: [],
     };
 
-    const scenario = SCENARIOS[scenarioId];
-    const startAge = scenario?.cradleConfig.cradleStartAge ?? 12;
+    const startAge = scenario?.cradleConfig?.cradleStartAge ?? 9;
 
-    // 랜덤 기본 스탯 (8~11) + 가족 배경 초기 스탯 적용
+    // 랜덤 기본 스탯 (20~25) + 가족 배경 초기 스탯 적용
     const baseStats = initStatsRandom();
-    const bgDef = scenario?.familyBackgrounds.find((b) => b.id === familyBackground);
+    const familyBackgrounds = scenario?.familyBackgrounds as FamilyBackground[] | undefined;
+    const bgDef = familyBackgrounds?.find((b) => b.id === familyBackground);
     const startStats = bgDef ? applyStatChanges(baseStats, bgDef.initialStats) : baseStats;
 
     const lifeDoc = {
       id: lifeId,
       userId: uid,
       scenarioId,
+      scenarioTitle: scenario?.title?.ko ?? null,
       characterName,
       familyBackground,
       stats: startStats,
@@ -93,14 +93,21 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // orderBy 제거 → 복합 인덱스 불필요, 정렬은 JS에서 처리
     const snapshot = await adminDb
       .collection("lives")
       .where("userId", "==", uid)
-      .orderBy("lastPlayedAt", "desc")
-      .limit(20)
+      .limit(50)
       .get();
 
-    const lives = snapshot.docs.map((doc) => doc.data());
+    const lives = snapshot.docs
+      .map((doc) => doc.data())
+      .sort((a, b) => {
+        const aMs = (a.lastPlayedAt as any)?._seconds ?? 0;
+        const bMs = (b.lastPlayedAt as any)?._seconds ?? 0;
+        return bMs - aMs;
+      })
+      .slice(0, 20);
 
     return NextResponse.json({ lives });
   } catch (err) {

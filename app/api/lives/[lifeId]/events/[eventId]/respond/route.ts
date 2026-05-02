@@ -28,9 +28,16 @@ export async function POST(req: NextRequest, { params }: Params) {
     const newStats = applyStatChanges(currentStats, statChanges ?? {});
     const diedEarlyOfStat = checkStatDeath(newStats);
 
+    // eventId 형식: "chapterNum-eventNum" (예: "3-2")
+    const [chapterPart, eventPart] = params.eventId.split("-");
+    const chapterNum = parseInt(chapterPart) || 0;
+    const eventNum = parseInt(eventPart) || 0;
+
     const updates: Record<string, unknown> = {
       stats: newStats,
       lastPlayedAt: FieldValue.serverTimestamp(),
+      currentChapterId: String(chapterNum),
+      currentEventIndex: eventNum,
     };
 
     if (diedEarlyOfStat) {

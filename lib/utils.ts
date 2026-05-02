@@ -44,7 +44,7 @@ export function applyStatChanges(stats: Stats, changes: Partial<Stats>): Stats {
 
 export function checkStatDeath(stats: Stats): StatKey | null {
   for (const [key, val] of Object.entries(stats)) {
-    if (val <= 0 || val >= 50) return key as StatKey;
+    if (val <= 0) return key as StatKey;
   }
   return null;
 }

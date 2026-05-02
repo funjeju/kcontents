@@ -7,6 +7,7 @@ export interface LifeData {
   id: string;
   characterName: string;
   scenarioId: string;
+  scenarioTitle?: string | null;
   familyBackground: string;
   stats: Stats;
   qualities: Record<string, number | boolean>;
@@ -19,6 +20,8 @@ export interface LifeData {
   selectedHeroCardSlots: string[];
   usedHeroCards: { cardId: string; usedAtChapter: number }[];
   lastPlayedAt: string | null;
+  currentChapterId: string | null;
+  currentEventIndex: number | null;
 }
 
 interface UseLifeResult {

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "@/i18n/navigation";
 import { motion } from "framer-motion";
-import { Settings, ChevronRight, Star, BookOpen, Trophy } from "lucide-react";
+import { Settings, ChevronRight, BookOpen, Trophy } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { auth } from "@/lib/firebase";
 import { onAuthStateChanged, type User } from "firebase/auth";
@@ -11,6 +11,7 @@ import { onAuthStateChanged, type User } from "firebase/auth";
 interface LifeSummary {
   id: string;
   scenarioId: string;
+  scenarioTitle?: string;
   characterName: string;
   isFinished: boolean;
   endingId: string | null;
@@ -19,22 +20,6 @@ interface LifeSummary {
   lastPlayedAt: string | null;
 }
 
-const SCENARIO_TITLES: Record<string, string> = {
-  mr_sunshine: "미스터 션샤인 정서",
-};
-
-const CASTING_ROLE_NAMES: Record<string, string> = {
-  the_witness: "시대의 목격자",
-  the_enlightened: "개화의 신사",
-  the_independence_fighter: "독립의 투사",
-  the_romantic: "시대의 연인",
-};
-
-const ENDING_TITLES: Record<string, { title: string; rarity: number }> = {
-  returner_independence_fighter: { title: "독립의 불꽃", rarity: 4.2 },
-  witness_silent_record: { title: "조용한 목격자", rarity: 18.5 },
-  enlightened_reformer: { title: "개화의 봄", rarity: 12.1 },
-};
 
 export default function MePage() {
   const [user, setUser] = useState<User | null>(null);
@@ -138,14 +123,18 @@ export default function MePage() {
               </div>
             ) : (
               lives.map((life, i) => {
-                const endingInfo = life.endingId ? ENDING_TITLES[life.endingId] : null;
-                const roleName = life.castingRole ? CASTING_ROLE_NAMES[life.castingRole] : null;
-                const currentChapter = life.completedChapters?.length
-                  ? Math.max(...life.completedChapters) + 1
-                  : 1;
+                const lastCompletedChapter = life.completedChapters?.length
+                  ? Math.max(...life.completedChapters)
+                  : 0;
+                const resumeChapter = life.currentChapterId
+                  ? parseInt(life.currentChapterId) || lastCompletedChapter + 1
+                  : lastCompletedChapter + 1;
+                const resumeEvent = life.currentEventIndex;
                 const href = life.isFinished
                   ? `/me/lives/${life.id}`
-                  : `/play/${life.id}/chapter/${currentChapter}/intro`;
+                  : resumeEvent && resumeChapter > lastCompletedChapter
+                  ? `/play/${life.id}/chapter/${resumeChapter}/event/${resumeEvent}`
+                  : `/play/${life.id}/chapter/${resumeChapter}/intro`;
 
                 return (
                   <motion.div
@@ -168,22 +157,17 @@ export default function MePage() {
                               <Badge variant="jade" className="text-[10px] px-1.5 py-0">완료</Badge>
                             ) : (
                               <Badge variant="muted" className="text-[10px] px-1.5 py-0">
-                                챕터 {currentChapter}
+                                {resumeEvent
+                                  ? `챕터 ${resumeChapter} · ${resumeEvent}번째`
+                                  : `챕터 ${resumeChapter}`}
                               </Badge>
                             )}
                           </div>
                           <p className="text-xs text-text-caption">
-                            {SCENARIO_TITLES[life.scenarioId] ?? life.scenarioId}
+                            {life.scenarioTitle ?? life.scenarioId}
                           </p>
-                          {life.isFinished && endingInfo && (
-                            <div className="flex items-center gap-1 mt-1">
-                              <Star size={10} className="text-accent-gold fill-accent-gold" />
-                              <span className="text-xs text-text-muted">{endingInfo.title}</span>
-                              <span className="text-xs text-text-caption">({endingInfo.rarity}%)</span>
-                            </div>
-                          )}
-                          {!life.isFinished && roleName && (
-                            <p className="text-xs text-accent-maple mt-0.5">{roleName}</p>
+                          {life.castingRole && !life.isFinished && (
+                            <p className="text-xs text-accent-maple mt-0.5">{life.castingRole}</p>
                           )}
                         </div>
                         <ChevronRight size={16} className="text-text-caption shrink-0" />
