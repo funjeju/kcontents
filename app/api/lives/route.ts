@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminAuth, adminDb, getSessionUid } from "@/lib/firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
 import { cookies } from "next/headers";
-import { generateId, initStats } from "@/lib/utils";
+import { generateId, initStatsRandom, applyStatChanges } from "@/lib/utils";
 import { MR_SUNSHINE_SCENARIO } from "@/data/scenarios/mr-sunshine";
 import type { Life, PathVariables, Scenario } from "@/lib/types";
 
@@ -39,13 +39,18 @@ export async function POST(req: NextRequest) {
     const scenario = SCENARIOS[scenarioId];
     const startAge = scenario?.cradleConfig.cradleStartAge ?? 12;
 
+    // 랜덤 기본 스탯 (8~11) + 가족 배경 초기 스탯 적용
+    const baseStats = initStatsRandom();
+    const bgDef = scenario?.familyBackgrounds.find((b) => b.id === familyBackground);
+    const startStats = bgDef ? applyStatChanges(baseStats, bgDef.initialStats) : baseStats;
+
     const lifeDoc = {
       id: lifeId,
       userId: uid,
       scenarioId,
       characterName,
       familyBackground,
-      stats: initStats(10),
+      stats: startStats,
       qualities: {},
       relationships: {},
       castingRole: null,

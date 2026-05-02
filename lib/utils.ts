@@ -8,13 +8,24 @@ export function cn(...inputs: ClassValue[]) {
 
 export function initStats(base = 10): Stats {
   return {
-    intellect: base,
-    creativity: base,
-    emotion: base,
-    physique: base,
-    sociability: base,
-    morality: base,
+    intellect: base, creativity: base, emotion: base,
+    physique: base, sociability: base, morality: base,
   };
+}
+
+// ADMIN.md: 시작 8~11 사이 무작위
+export function initStatsRandom(): Stats {
+  const r = () => 8 + Math.floor(Math.random() * 4);
+  return {
+    intellect: r(), creativity: r(), emotion: r(),
+    physique: r(), sociability: r(), morality: r(),
+  };
+}
+
+export function getStatWarningLevel(val: number): "none" | "soft" | "hard" {
+  if (val >= 19 || val <= 1) return "hard";
+  if (val >= 16 || val <= 4) return "soft";
+  return "none";
 }
 
 export function clampStat(value: number): number {

@@ -1,10 +1,19 @@
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
-import { MR_SUNSHINE_SCENARIO } from "@/data/scenarios/mr-sunshine";
+import { adminDb } from "@/lib/firebase-admin";
 
 export async function GET() {
-  return NextResponse.json({
-    scenarios: [MR_SUNSHINE_SCENARIO],
-  });
+  try {
+    const snap = await adminDb
+      .collection("scenarios")
+      .where("status", "==", "published")
+      .orderBy("createdAt", "desc")
+      .get();
+
+    const scenarios = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    return NextResponse.json({ scenarios });
+  } catch {
+    return NextResponse.json({ scenarios: [] });
+  }
 }

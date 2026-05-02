@@ -58,7 +58,7 @@ export default function CastingPage({ params }: Props) {
   }
 
   function handleStartMainStory() {
-    router.push(`/play/${lifeId}/chapter/5/intro`);
+    router.push(`/play/${lifeId}/cards`);
   }
 
   return (

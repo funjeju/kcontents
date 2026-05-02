@@ -1,11 +1,25 @@
 import { ScenarioCard } from "@/components/scenarios/scenario-card";
-import { MR_SUNSHINE_SCENARIO } from "@/data/scenarios/mr-sunshine";
+import { adminDb } from "@/lib/firebase-admin";
 import type { Scenario } from "@/lib/types";
 
-// Phase 1: Mr. Sunshine 1개 + 준비 중 카드들
-const PUBLISHED_SCENARIOS: Scenario[] = [MR_SUNSHINE_SCENARIO];
+export const dynamic = "force-dynamic";
 
-export default function RecommendedPage() {
+async function getPublishedScenarios(): Promise<Scenario[]> {
+  try {
+    const snap = await adminDb
+      .collection("scenarios")
+      .where("status", "==", "published")
+      .orderBy("createdAt", "desc")
+      .get();
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() })) as Scenario[];
+  } catch {
+    return [];
+  }
+}
+
+export default async function RecommendedPage() {
+  const scenarios = await getPublishedScenarios();
+
   return (
     <div className="page-container">
       {/* Header */}
@@ -19,9 +33,15 @@ export default function RecommendedPage() {
 
       {/* Scenarios */}
       <div className="space-y-card-gap animate-fade-in">
-        {PUBLISHED_SCENARIOS.map((scenario) => (
-          <ScenarioCard key={scenario.id} scenario={scenario} featured />
-        ))}
+        {scenarios.length > 0 ? (
+          scenarios.map((scenario, i) => (
+            <ScenarioCard key={scenario.id} scenario={scenario} featured={i === 0} />
+          ))
+        ) : (
+          <p className="text-text-caption text-sm text-center py-8">
+            출시된 시나리오가 없습니다
+          </p>
+        )}
 
         {/* Coming soon */}
         {COMING_SOON.map((item) => (

@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "@/i18n/navigation";
 import { useLife } from "@/lib/hooks/use-life";
+import { useChapterEvents } from "@/lib/hooks/use-chapter-events";
 import { motion, AnimatePresence } from "framer-motion";
 import { GameHeader } from "@/components/layout/game-header";
 import { ChoiceButton } from "@/components/game/choice-button";
+import { CardTray } from "@/components/game/card-tray";
 import { Button } from "@/components/ui/button";
 import { initStats, applyStatChanges } from "@/lib/utils";
 import type { Stats } from "@/lib/types";
@@ -24,14 +26,37 @@ export default function EventPage({ params }: Props) {
 
   const { life, mutate } = useLife(lifeId);
 
+  // Try loading events from Firestore (scenario-specific)
+  const { events: firestoreEvents, loading: eventsLoading } = useChapterEvents(
+    life?.scenarioId,
+    chapterNum
+  );
+  // After 800ms fall back to hardcoded events so we never block the player
+  const [useFallback, setUseFallback] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setUseFallback(true), 800);
+    return () => clearTimeout(t);
+  }, []);
+
   const [phase, setPhase] = useState<Phase>("choosing");
   const [selectedChoice, setSelectedChoice] = useState<string | null>(null);
   const [statDeltas, setStatDeltas] = useState<Partial<Stats>>({});
   const [saving, setSaving] = useState(false);
+  const [liveStats, setLiveStats] = useState<Stats | null>(null);
 
-  const event = getMockEvent(chapterNum, eventNum);
-  const totalEvents = 6;
-  const stats = life?.stats ?? initStats(10);
+  // Resolve event pool: Firestore first, fallback to hardcoded
+  const eventPool =
+    (!eventsLoading || useFallback)
+      ? (firestoreEvents ?? fallbackEvents(chapterNum))
+      : null;
+
+  const event = eventPool
+    ? eventPool[(eventNum - 1) % eventPool.length] ?? eventPool[0]
+    : null;
+
+  const totalEvents = eventPool?.length ?? 6;
+  const baseStats = life?.stats ?? initStats(10);
+  const stats = liveStats ?? baseStats;
 
   async function handleChoice(choiceId: string) {
     if (phase !== "choosing") return;
@@ -44,7 +69,7 @@ export default function EventPage({ params }: Props) {
     setSelectedChoice(choiceId);
     setPhase("result");
 
-    const outcome = choiceId === "A" ? event.outcomes.A : event.outcomes.B;
+    const outcome = choiceId === "A" ? event!.outcomes.A : event!.outcomes.B;
     setStatDeltas(outcome.statChanges);
 
     // 즉시 로컬 업데이트 + 백그라운드 저장
@@ -84,6 +109,29 @@ export default function EventPage({ params }: Props) {
     } else {
       router.push(`/play/${lifeId}/chapter/${n}/event/${nextEventNum}`);
     }
+  }
+
+  // Show skeleton while events load (only briefly — 800ms fallback kicks in)
+  if (!event) {
+    return (
+      <div className="min-h-dvh bg-bg flex flex-col">
+        <GameHeader
+          chapter={chapterNum} age={age} year={year}
+          eventProgress={{ current: eventNum, total: 6 }}
+          stats={stats}
+          backHref={`/play/${lifeId}/chapter/${n}/intro`}
+          phase={chapterNum <= T0_CHAPTER ? "cradle" : "main"}
+        />
+        <div className="flex-1 flex flex-col max-w-game mx-auto w-full px-screen-x py-6">
+          <p className="era-label mb-4">{age}세 · {year}년</p>
+          <div className="space-y-3 animate-pulse">
+            <div className="h-4 bg-white/10 rounded w-3/4" />
+            <div className="h-4 bg-white/10 rounded w-full" />
+            <div className="h-4 bg-white/10 rounded w-2/3" />
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -169,6 +217,22 @@ export default function EventPage({ params }: Props) {
                 isFreeform={choice.id === "C"}
               />
             ))}
+
+            {/* 카드 트레이 */}
+            {life?.selectedHeroCardSlots && life.selectedHeroCardSlots.length > 0 && (
+              <CardTray
+                lifeId={lifeId}
+                scenarioId={life.scenarioId}
+                selectedCardIds={life.selectedHeroCardSlots}
+                usedCards={life.usedHeroCards ?? []}
+                stats={stats}
+                chapterNum={chapterNum}
+                onCardUsed={(_cardId, newStats) => {
+                  setLiveStats(newStats);
+                  mutate({ stats: newStats });
+                }}
+              />
+            )}
           </motion.div>
         )}
 
@@ -750,7 +814,6 @@ const CHAPTER_EVENTS: Record<number, MockEvent[]> = {
   ],
 };
 
-function getMockEvent(chapter: number, event: number): MockEvent {
-  const pool = CHAPTER_EVENTS[chapter] ?? CHAPTER_EVENTS[1];
-  return pool[(event - 1) % pool.length] ?? pool[0];
+function fallbackEvents(chapter: number): MockEvent[] {
+  return CHAPTER_EVENTS[chapter] ?? CHAPTER_EVENTS[1] ?? [];
 }

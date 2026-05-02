@@ -48,6 +48,12 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       delete body.addCompletedChapter;
     }
 
+    // Special: addUsedHeroCard uses arrayUnion
+    if (body.addUsedHeroCard && typeof body.addUsedHeroCard === "object") {
+      updates.usedHeroCards = FieldValue.arrayUnion(body.addUsedHeroCard);
+      delete body.addUsedHeroCard;
+    }
+
     Object.assign(updates, body);
     await adminDb.collection("lives").doc(params.lifeId).update(updates);
 

@@ -51,7 +51,7 @@ export default function CharacterCreatePage({ params }: Props) {
       });
       const data = await res.json();
       if (data.lifeId) {
-        router.push(`/play/${data.lifeId}/chapter/1/intro`);
+        router.push(`/play/${data.lifeId}/intro`);
       }
     } catch {
       setLoading(false);

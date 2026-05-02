@@ -16,6 +16,8 @@ export interface LifeData {
   endingId: string | null;
   endingNarrative: string | null;
   completedChapters: number[];
+  selectedHeroCardSlots: string[];
+  usedHeroCards: { cardId: string; usedAtChapter: number }[];
   lastPlayedAt: string | null;
 }
 

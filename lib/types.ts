@@ -327,8 +327,134 @@ export interface OnboardRequest {
   language: "ko" | "en";
 }
 
+// ─── Location Card ────────────────────────────────────────────────────────────
+export interface LocationCard {
+  id: string;
+  scenarioId: string;
+  nameKo: string;                  // 장소 이름 (예: "정동길")
+  nameEn: string;
+  address: string;                 // 실제 주소
+  lat: number;                     // 위도
+  lng: number;                     // 경도
+  chapterAge?: number;             // 이 장소가 등장하는 나이 (선택)
+  castingRoleIds?: string[];       // 해당 캐스팅에만 등장 (없으면 공통)
+  inGameMeaning: string;           // 작품 안에서의 의미 (1~2문장)
+  sensoryDescription: string;      // 감각적 장소 묘사 가이드 (AI 프롬프트 주입용, 80~120자)
+  guideNote: string;               // 실제 방문 가이드 한 줄
+  imageUrl?: string;
+}
+
+// ─── BGM ─────────────────────────────────────────────────────────────────────
+export type BgmContext =
+  | "everyday"          // 평상시
+  | "spring" | "summer" | "autumn" | "winter"
+  | "t0_casting"        // T-0 캐스팅 모먼트
+  | "milestone"         // 이정표
+  | "iconic_moment"     // 명장면
+  | "stat_warning"      // 스탯 위험 경고
+  | "death"             // 즉사 결말
+  | "ending_happy"      // 행복한 결말
+  | "ending_tragic"     // 비극적 결말
+  | "ending_bittersweet"// 씁쓸한 결말
+  | "cradle"            // Cradle 단계 전반
+  | "chapter_end";      // 챕터 마무리
+
+export interface BgmTrack {
+  id: string;
+  context: BgmContext;
+  nameKo: string;                  // 트랙 이름/분위기 설명
+  mood: string;                    // 감정 키워드 (예: "고요한 긴장, 먼 곳을 바라보는")
+  instruments: string[];           // 주요 악기 (예: ["가야금", "첼로", "피아노"])
+  tempo: "slow" | "moderate" | "fast";
+  referenceTrackHint: string;      // AI가 이 분위기를 만들어낼 때 참고할 음악 묘사
+  fileUrl?: string;                // 실제 파일 URL (출시 후 연결)
+}
+
+// ─── Entry Questions ──────────────────────────────────────────────────────────
+export interface EntryQuestionChoice {
+  id: string;          // "A" | "B" | "C"
+  text: string;
+  castingHint: string; // 어느 캐스팅 방향으로 수렴하는지 내부 힌트 (어드민용)
+}
+
+export interface EntryQuestion {
+  id: string;          // "q1" ~ "q10"
+  order: number;
+  text: string;        // 질문 본문 (간접적, 시대극 톤)
+  subtext?: string;    // 보조 설명 (선택)
+  choices: EntryQuestionChoice[];
+}
+
+export interface EntryAnswers {
+  [questionId: string]: string; // questionId → choiceId
+}
+
+// ─── Safety Rules ─────────────────────────────────────────────────────────────
+export type SafetySourceType = "drama" | "book" | "history" | "script";
+
+export interface SafetyRules {
+  scenarioId: string;
+  sourceType: SafetySourceType;
+  // 소스 A·B (드라마/책) — IP 보호
+  forbiddenCharacterNames: string[];    // 실명 사용 금지 인물
+  forbiddenQuotes: string[];            // 직접 인용 금지 명대사
+  forbiddenScenePatterns: string[];     // 묘사 금지 명장면 패턴
+  // 소스 C (역사) — 역사 왜곡 방지
+  confirmedHistoricalFacts: string[];   // 반드시 지켜야 할 역사적 사실
+  forbiddenHistoricalDistortions: string[]; // 왜곡 금지 항목
+  realPersonPrivacyRules: string[];     // 실존 인물 사적 영역 창작 금지 규칙
+  dignityRules: string[];               // 피해자/희생자 존엄 보존 규칙
+  // 공통
+  generalRules: string[];               // 소스 무관 공통 안전 규칙
+  updatedAt?: string;
+}
+
+// ─── Milestone ───────────────────────────────────────────────────────────────
+export interface MilestoneOutcome {
+  castingRoleId: string;
+  decisionPrompt: string;        // 이 캐스팅이 직면하는 결정 모먼트 설명
+  dramaticPathFlag?: string;     // 드라마 흐름 선택 시 설정되는 flag
+  divergentPathFlag?: string;    // 갈라진 길 선택 시 설정되는 flag
+}
+
+export interface Milestone {
+  id: string;
+  scenarioId: string;
+  age: number;                   // 이 이정표가 발생하는 나이
+  year?: number;                 // 절대 연도 (역사 시나리오용)
+  title: string;                 // 이정표 이름 (예: "한산도 대첩", "T-0 모먼트")
+  description: string;           // 이정표 상황 설명
+  isHistoricalFact: boolean;     // true = 역사적 사실 (플레이어가 막을 수 없음)
+  isT0: boolean;                 // T-0 캐스팅 순간인지
+  aiDirective: string;           // AI가 이 이정표에서 따라야 할 지시문
+  castingOutcomes: MilestoneOutcome[]; // 캐스팅별 결정 모먼트
+  order: number;                 // 정렬 순서
+}
+
 // ─── Card ─────────────────────────────────────────────────────────────────────
 export type CardRarity = "common" | "uncommon" | "rare" | "epic" | "legendary";
+export type CardCategory = "flow" | "encounter" | "growth" | "threshold" | "custom";
+export type CardUsageTiming = "chapter_start" | "chapter_end" | "stat_warning" | "anytime";
+
+export interface GameCard {
+  id: string;
+  scenarioId?: string;           // 커스텀 카드만 존재
+  category: CardCategory;
+  nameKo: string;
+  nameEn: string;
+  descriptionKo: string;
+  effectKo: string;              // 실제 효과 설명 (간결)
+  usageTiming: CardUsageTiming;
+  usageCondition?: string;       // 사용 조건 (예: "스탯 19 도달 시")
+  statEffect?: Partial<Stats>;   // Growth/Threshold 카드용
+  statCondition?: {              // Threshold 카드용: 이 스탯이 임계값일 때만 사용 가능
+    key: StatKey;
+    min?: number;
+    max?: number;
+  };
+  rarity: CardRarity;
+  isStandard: boolean;           // false = 시나리오 커스텀 카드
+}
 
 export interface HeroCardDefinition {
   id: string;

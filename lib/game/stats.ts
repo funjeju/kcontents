@@ -36,10 +36,60 @@ export function getStatDeathNarrative(key: StatKey, value: number): string {
 
 export function applyNaturalAgingStats(stats: Stats, age: number): Partial<Stats> {
   const changes: Partial<Stats> = {};
-  if (age >= 18) {
-    changes.physique = -1;
-  }
+  if (age >= 18) changes.physique = -1;
   return changes;
+}
+
+// ADMIN.md Stage 16: 스탯 간 상호작용 규칙
+export const STAT_INTERACTIONS: {
+  condition: (s: Stats) => boolean;
+  quality: string;
+  labelKo: string;
+  isDanger: boolean;
+}[] = [
+  {
+    condition: (s) => s.intellect >= 17 && s.creativity >= 17,
+    quality: "genius",
+    labelKo: "천재",
+    isDanger: false,
+  },
+  {
+    condition: (s) => s.morality >= 17 && s.sociability >= 17,
+    quality: "community_leader",
+    labelKo: "공동체 지도자",
+    isDanger: false,
+  },
+  {
+    condition: (s) => s.morality >= 17 && s.sociability <= 5,
+    quality: "isolated_righteous",
+    labelKo: "고립된 의인",
+    isDanger: true,
+  },
+  {
+    condition: (s) => s.physique >= 17 && s.morality <= 5,
+    quality: "rampage_risk",
+    labelKo: "폭주 위험",
+    isDanger: true,
+  },
+];
+
+export function computeStatInteractions(stats: Stats): {
+  newQualities: Record<string, number>;
+  activatedLabels: string[];
+  dangerLabels: string[];
+} {
+  const newQualities: Record<string, number> = {};
+  const activatedLabels: string[] = [];
+  const dangerLabels: string[] = [];
+
+  for (const rule of STAT_INTERACTIONS) {
+    if (rule.condition(stats)) {
+      newQualities[rule.quality] = 1;
+      activatedLabels.push(rule.labelKo);
+      if (rule.isDanger) dangerLabels.push(rule.labelKo);
+    }
+  }
+  return { newQualities, activatedLabels, dangerLabels };
 }
 
 export function computeStatTotal(stats: Stats): number {
